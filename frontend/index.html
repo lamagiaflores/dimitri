@@ -660,17 +660,26 @@ function showDesktop(user){
           mode: user.mode || 'personal'
         })
       });
-      if(res.ok){
-        const data = await res.json();
-        chatMessages.lastChild.remove();
+      const raw = await res.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch(_) {}
+      chatMessages.lastChild.remove();
+      if(res.ok && data){
         appendMsg('assistant', data.chat_reply || data.spoken || 'Listo.');
         refreshDeliverables();
         return;
       }
-    } catch(e) {}
-    chatMessages.lastChild.remove();
-    appendMsg('assistant', 'Pedido registrado. Cuando el backend esté conectado generaré el archivo real (PDF/Excel/etc.) y lo verás a la derecha.');
-    refreshDeliverables();
+      appendMsg('assistant', 'El backend respondió con error HTTP ' + res.status + '. ' +
+        (data && (data.detail || data.message) ? JSON.stringify(data.detail || data.message) : raw.slice(0, 180)) +
+        ' — Revisa en Render los logs y que GROQ_API_KEY y Firebase Admin estén bien.');
+      refreshDeliverables();
+      return;
+    } catch(e) {
+      chatMessages.lastChild.remove();
+      appendMsg('assistant', 'No pude contactar el backend (' + (e.message || e) + '). URL: ' + API + ' — Si Render está dormido, espera 1 minuto y reintenta.');
+      refreshDeliverables();
+      return;
+    }
   }
 
   btnSend.onclick = sendMessage;

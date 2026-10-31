@@ -1,12 +1,11 @@
 """
 Dimitri System — Backend FastAPI
-Cerebro central con filosofía de cero respuestas negativas.
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import voice, chat, files
+from routers import voice, chat, files, whatsapp
 from services.firebase_admin import init_firebase
 import os
 from dotenv import load_dotenv
@@ -16,24 +15,25 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 Iniciando Dimitri System Backend...")
+    print("Iniciando Dimitri System Backend...")
+    print("GROQ_API_KEY set:", bool((os.getenv("GROQ_API_KEY") or "").strip()))
     init_firebase()
-    print("✅ Dimitri listo. Filosofía: cero respuestas negativas.")
+    print("Dimitri listo.")
     yield
-    print("👋 Backend detenido.")
+    print("Backend detenido.")
 
 
 app = FastAPI(
     title="Dimitri System API",
     description="Backend adaptativo · Voz + Chat + Entregables · Cero negativas",
-    version="2.0.0",
+    version="2.0.1",
     lifespan=lifespan,
 )
 
-origins = os.getenv("CORS_ORIGINS", "*").split(",")
+# CORS abierto para Vercel + local
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins != ["*"] else ["*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,6 +42,7 @@ app.add_middleware(
 app.include_router(voice.router)
 app.include_router(chat.router)
 app.include_router(files.router)
+app.include_router(whatsapp.router)
 
 
 @app.get("/")
@@ -50,12 +51,16 @@ async def root():
         "message": "Dimitri System Backend activo",
         "philosophy": "Cero respuestas negativas",
         "docs": "/docs",
+        "version": "2.0.1",
     }
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "groq": bool((os.getenv("GROQ_API_KEY") or "").strip()),
+    }
 
 
 if __name__ == "__main__":

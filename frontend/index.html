@@ -226,6 +226,26 @@
   .music-fallback.show{display:flex}
   .music-fallback a{background:#00b4d8;color:#04121a;text-decoration:none;font-weight:600;padding:8px 16px;border-radius:999px}
 </style>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script>
+  window.DIMITRI_API = "https://dimitri-718z.onrender.com";
+  localStorage.setItem("dimitri_api", window.DIMITRI_API);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQrrDcUXJwbq3A8YRNQr0fXO0RGfpKN_w",
+    authDomain: "dimitri-system.firebaseapp.com",
+    projectId: "dimitri-system",
+    storageBucket: "dimitri-system.firebasestorage.app",
+    messagingSenderId: "742406022917",
+    appId: "1:742406022917:web:3def5ccc885344ff83f96c"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  window.dimitriAuth = firebase.auth();
+  window.dimitriDb = firebase.firestore();
+</script>
+
 </head>
 <body>
 <div id="login-screen">
@@ -416,46 +436,135 @@ function detectRole(){
   return 'desktop';
 }
 function forceRole(role){localStorage.setItem('dimitri_force_role',role);location.reload();}
-const AUTH_KEY='dimitri_user';
-let selectedMode='personal';
-document.querySelectorAll('.profile-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.profile-btn').forEach(b=>b.classList.remove('active'));
+
+const AUTH_KEY = 'dimitri_user';
+let selectedMode = 'personal';
+let firebaseUserCache = null;
+
+document.querySelectorAll('.profile-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    selectedMode=btn.dataset.mode;
+    selectedMode = btn.dataset.mode;
   });
 });
-function getCurrentUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY));}catch{return null;}}
-function saveUser(user){localStorage.setItem(AUTH_KEY,JSON.stringify(user));}
-function logout(){localStorage.removeItem(AUTH_KEY);location.reload();}
-function showError(msg){document.getElementById('login-error').textContent=msg;}
-const role=detectRole();
-document.getElementById('role-hint').textContent=role==='desktop'?'Detectado: Computadora → Panel de recepción':'Detectado: Móvil/Tablet → Hub de voz (recomendado en horizontal)';
-document.getElementById('btn-login').onclick=()=>{
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-password').value;
-  if(!email||!pass)return showError('Completa correo y contraseña');
-  const users=JSON.parse(localStorage.getItem('dimitri_users')||'{}');
-  if(!users[email]||users[email].password!==pass)return showError('Correo o contraseña incorrectos. ¿Crear cuenta?');
-  users[email].mode=selectedMode;
-  localStorage.setItem('dimitri_users',JSON.stringify(users));
-  saveUser({email,uid:users[email].uid,mode:selectedMode,createdAt:users[email].createdAt});
-  startApp();
+
+function getCurrentUser() {
+  if (firebaseUserCache) {
+    const mode = localStorage.getItem('dimitri_mode_' + firebaseUserCache.uid) || selectedMode || 'personal';
+    return {
+      uid: firebaseUserCache.uid,
+      email: firebaseUserCache.email,
+      mode: mode
+    };
+  }
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; }
+}
+
+function saveUser(user) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  if (user && user.uid) localStorage.setItem('dimitri_mode_' + user.uid, user.mode || 'personal');
+}
+
+function logout() {
+  localStorage.removeItem(AUTH_KEY);
+  if (window.dimitriAuth) {
+    window.dimitriAuth.signOut().finally(() => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  if (el) el.textContent = msg;
+}
+
+const role = detectRole();
+const roleHint = document.getElementById('role-hint');
+if (roleHint) {
+  roleHint.textContent = role === 'desktop'
+    ? 'Detectado: Computadora → Panel de recepción'
+    : 'Detectado: Móvil/Tablet → Hub de voz (recomendado en horizontal)';
+}
+
+document.getElementById('btn-login').onclick = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  if (!email || !pass) return showError('Completa correo y contraseña');
+  showError('Entrando...');
+  try {
+    if (!window.dimitriAuth) throw new Error('Firebase no cargó');
+    const cred = await window.dimitriAuth.signInWithEmailAndPassword(email, pass);
+    firebaseUserCache = cred.user;
+    const mode = selectedMode || localStorage.getItem('dimitri_mode_' + cred.user.uid) || 'personal';
+    // Guardar modo en Firestore si se puede
+    try {
+      await window.dimitriDb.collection('users').doc(cred.user.uid).set({
+        email: cred.user.email,
+        mode: mode,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) { console.warn('Firestore profile', e); }
+    saveUser({ email: cred.user.email, uid: cred.user.uid, mode: mode });
+    showError('');
+    startApp();
+  } catch (e) {
+    console.error(e);
+    // Fallback local si Firebase falla
+    const users = JSON.parse(localStorage.getItem('dimitri_users') || '{}');
+    if (users[email] && users[email].password === pass) {
+      saveUser({ email, uid: users[email].uid, mode: selectedMode, createdAt: users[email].createdAt });
+      showError('');
+      startApp();
+      return;
+    }
+    showError(e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+      ? 'Correo o contraseña incorrectos'
+      : ('Error: ' + (e.message || e.code || e)));
+  }
 };
-document.getElementById('btn-register').onclick=()=>{
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-password').value;
-  if(!email||!pass)return showError('Completa correo y contraseña');
-  if(pass.length<4)return showError('La contraseña debe tener al menos 4 caracteres');
-  if(!email.includes('@'))return showError('Correo no válido');
-  const users=JSON.parse(localStorage.getItem('dimitri_users')||'{}');
-  if(users[email])return showError('Ese correo ya existe. Usa Entrar.');
-  const uid='local_'+Date.now().toString(36);
-  users[email]={password:pass,uid,mode:selectedMode,createdAt:new Date().toISOString()};
-  localStorage.setItem('dimitri_users',JSON.stringify(users));
-  saveUser({email,uid,mode:selectedMode,createdAt:users[email].createdAt});
-  startApp();
+
+document.getElementById('btn-register').onclick = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  if (!email || !pass) return showError('Completa correo y contraseña');
+  if (pass.length < 6) return showError('La contraseña debe tener al menos 6 caracteres (requisito Firebase)');
+  if (!email.includes('@')) return showError('Correo no válido');
+  showError('Creando cuenta...');
+  try {
+    if (!window.dimitriAuth) throw new Error('Firebase no cargó');
+    const cred = await window.dimitriAuth.createUserWithEmailAndPassword(email, pass);
+    firebaseUserCache = cred.user;
+    try {
+      await window.dimitriDb.collection('users').doc(cred.user.uid).set({
+        email: cred.user.email,
+        mode: selectedMode,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) { console.warn('Firestore profile', e); }
+    saveUser({ email: cred.user.email, uid: cred.user.uid, mode: selectedMode });
+    showError('');
+    startApp();
+  } catch (e) {
+    console.error(e);
+    if (e.code === 'auth/email-already-in-use') {
+      showError('Ese correo ya existe. Usa Entrar.');
+      return;
+    }
+    // Fallback local
+    const users = JSON.parse(localStorage.getItem('dimitri_users') || '{}');
+    if (users[email]) return showError('Ese correo ya existe. Usa Entrar.');
+    const uid = 'local_' + Date.now().toString(36);
+    users[email] = { password: pass, uid, mode: selectedMode, createdAt: new Date().toISOString() };
+    localStorage.setItem('dimitri_users', JSON.stringify(users));
+    saveUser({ email, uid, mode: selectedMode, createdAt: users[email].createdAt });
+    showError('Cuenta local (Firebase falló: ' + (e.code || e.message) + ')');
+    startApp();
+  }
 };
+
+
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
 document.getElementById('btn-logout-desktop').onclick=logout;
 document.getElementById('btn-logout-mobile').onclick=logout;
@@ -484,7 +593,7 @@ function showDesktop(user){
   const deliverablesPanel = document.getElementById('deliverablesPanel');
   let pendingFiles = [];
   let currentSessionId = 'sess_' + Date.now().toString(36);
-  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'https://dimitri-718z.onrender.com';
 
   function appendMsg(role, text){
     const div = document.createElement('div');
@@ -744,7 +853,7 @@ function makeDemoQrDataUrl(payload){
 }
 
 async function requestWhatsAppQr(uid){
-  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'https://dimitri-718z.onrender.com';
   // Intento backend real
   try {
     const res = await fetch(API + '/api/v1/whatsapp/session', {
@@ -797,7 +906,7 @@ function setupWhatsAppUI(uid){
   }
   if(btnDisc){
     btnDisc.onclick = async () => {
-      const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+      const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'https://dimitri-718z.onrender.com';
       try {
         await fetch(API + '/api/v1/whatsapp/disconnect', {
           method: 'POST',
@@ -1048,7 +1157,25 @@ function initFaceAndVoice(){
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='block';});
   installBtn.addEventListener('click',async e=>{e.stopPropagation();if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')installBtn.style.display='none';deferredPrompt=null;});
 }
-if(getCurrentUser())startApp();
+
+if (window.dimitriAuth) {
+  window.dimitriAuth.onAuthStateChanged(async (user) => {
+    if (user) {
+      firebaseUserCache = user;
+      let mode = localStorage.getItem('dimitri_mode_' + user.uid) || 'personal';
+      try {
+        const snap = await window.dimitriDb.collection('users').doc(user.uid).get();
+        if (snap.exists && snap.data().mode) mode = snap.data().mode;
+      } catch (e) {}
+      saveUser({ email: user.email, uid: user.uid, mode: mode });
+      const loginEl = document.getElementById('login-screen');
+      if (loginEl && !loginEl.classList.contains('hidden')) startApp();
+    }
+  });
+} else if (getCurrentUser()) {
+  startApp();
+}
+
 </script>
 </body>
 </html>

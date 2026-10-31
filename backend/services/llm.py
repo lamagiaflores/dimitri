@@ -1,6 +1,5 @@
 """
-LLM Service — Groq + Function Calling
-Filosofía: siempre produce una acción o respuesta útil.
+LLM Service — Groq + Function Calling (con timeout para no colgar Render)
 """
 
 import os
@@ -17,7 +16,6 @@ Filosofía OBLIGATORIA: CERO RESPUESTAS NEGATIVAS.
 Nunca digas "no puedo", "no sé", "no está disponible" ni equivalentes.
 Siempre ofrece una solución, una aproximación útil, un archivo generado o el siguiente paso positivo.
 Responde en español natural y profesional.
-Cuando uses herramientas, elige la más adecuada según el perfil del usuario (personal o empresarial).
 Si piden Excel, PDF o Word, USA la herramienta correspondiente con datos de ejemplo realistas.
 """
 
@@ -78,7 +76,7 @@ TOOLS: List[Dict] = [
         "type": "function",
         "function": {
             "name": "analyze_code",
-            "description": "Analiza o corrige código y genera un archivo con el resultado.",
+            "description": "Analiza o corrige código.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -94,7 +92,7 @@ TOOLS: List[Dict] = [
         "type": "function",
         "function": {
             "name": "create_note",
-            "description": "Guarda una nota personal del usuario.",
+            "description": "Guarda una nota personal.",
             "parameters": {
                 "type": "object",
                 "properties": {"note": {"type": "string"}},
@@ -106,7 +104,7 @@ TOOLS: List[Dict] = [
         "type": "function",
         "function": {
             "name": "general_answer",
-            "description": "Responde cualquier pregunta de forma útil y creativa.",
+            "description": "Responde de forma útil.",
             "parameters": {
                 "type": "object",
                 "properties": {"answer": {"type": "string"}},
@@ -123,16 +121,16 @@ def _get_client():
         key = (os.getenv("GROQ_API_KEY") or "").strip()
         if not key:
             return None
-        return Groq(api_key=key)
+        # timeout evita que Render se quede colgado
+        return Groq(api_key=key, timeout=25.0)
     except Exception as e:
         print(f"[WARN] Groq client: {e}")
         return None
 
 
 def _heuristic_action(transcript: str) -> Dict[str, Any]:
-    """Si Groq falla, igual generamos algo útil (cero negativas)."""
     t = (transcript or "").lower()
-    if re.search(r"excel|xlsx|hoja de c[aá]lculo|reporte.*tienda|abarrotes|ventas", t):
+    if re.search(r"excel|xlsx|hoja de c[aá]lculo|reporte|abarrotes|ventas", t):
         return {
             "action": "generate_excel",
             "args": {
@@ -148,12 +146,12 @@ def _heuristic_action(transcript: str) -> Dict[str, Any]:
                 "filename": "reporte_abarrotes.xlsx",
             },
         }
-    if re.search(r"\bpdf\b|informe|documento pdf", t):
+    if re.search(r"\bpdf\b|informe", t):
         return {
             "action": "generate_pdf",
             "args": {
                 "title": "Informe Dimitri",
-                "content": f"Informe generado a partir de la solicitud:\n\n{transcript}\n\nContenido base listo para editar.",
+                "content": f"Informe generado a partir de:\n\n{transcript}",
                 "filename": "informe_dimitri.pdf",
             },
         }
@@ -162,15 +160,15 @@ def _heuristic_action(transcript: str) -> Dict[str, Any]:
             "action": "generate_docx",
             "args": {
                 "title": "Documento Dimitri",
-                "content": f"Documento generado según tu pedido:\n\n{transcript}",
+                "content": f"Documento generado:\n\n{transcript}",
                 "filename": "documento_dimitri.docx",
             },
         }
     return {
         "action": "general_answer",
         "args": {
-            "answer": f"Entendido. Trabajé con tu pedido: «{transcript[:200]}». "
-                      f"Si necesitas un Excel, PDF o Word, pídemelo explícitamente y lo genero."
+            "answer": f"Entendido: «{(transcript or '')[:200]}». "
+                      f"Puedo generar Excel, PDF o Word si me lo pides."
         },
     }
 
@@ -180,42 +178,49 @@ async def process_with_llm(
     mode: str = "personal",
     context: Optional[Dict] = None
 ) -> Dict[str, Any]:
+    # Atajo local: si pide excel/pdf/word, no dependemos de Groq (rápido y fiable en Render free)
+    tlow = (transcript or "").lower()
+    if re.search(r"excel|xlsx|pdf|\bword\b|docx|reporte|abarrotes", tlow):
+        print("[INFO] Atajo local de generación de archivo")
+        return _heuristic_action(transcript)
+
     mode_hint = (
-        "El usuario está en MODO EMPRESARIAL (inventario, reportes, mostrador)."
+        "MODO EMPRESARIAL."
         if mode == "business"
-        else "El usuario está en MODO PERSONAL (música, notas, consultas diarias)."
+        else "MODO PERSONAL."
     )
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT + "\n" + mode_hint},
-        {"role": "user", "content": f"Comando / mensaje del usuario:\n{transcript}"},
+        {"role": "user", "content": f"Mensaje del usuario:\n{transcript}"},
     ]
-    if context:
-        try:
-            messages.insert(1, {"role": "system", "content": f"Contexto: {json.dumps(context, ensure_ascii=False)}"})
-        except Exception:
-            pass
 
     client = _get_client()
     if client is None:
-        print("[WARN] GROQ_API_KEY ausente o inválida — usando heurística local")
+        print("[WARN] Sin GROQ_API_KEY — heurística")
         return _heuristic_action(transcript)
 
     try:
-        response = client.chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            messages=messages,
-            tools=TOOLS,
-            tool_choice="auto",
-            temperature=0.35,
-            max_tokens=1500,
-        )
+        import asyncio
+        loop = asyncio.get_event_loop()
+
+        def _call():
+            return client.chat.completions.create(
+                model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                messages=messages,
+                tools=TOOLS,
+                tool_choice="auto",
+                temperature=0.35,
+                max_tokens=1200,
+            )
+
+        response = await asyncio.wait_for(loop.run_in_executor(None, _call), timeout=28)
         message = response.choices[0].message
         if getattr(message, "tool_calls", None):
             tc = message.tool_calls[0]
             args = json.loads(tc.function.arguments)
             return {"action": tc.function.name, "args": args, "raw": message.content}
-        content = message.content or "Entendido. Aquí tienes la mejor respuesta posible ahora mismo."
+        content = message.content or "Listo, aquí tienes una respuesta útil."
         return {"action": "general_answer", "args": {"answer": content}, "raw": content}
     except Exception as e:
-        print(f"[WARN] Groq error: {e}")
+        print(f"[WARN] Groq/timeout: {e}")
         return _heuristic_action(transcript)

@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0e17">
+<link rel="manifest" href="manifest.json">
+<title>Dimitri System</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{width:100vw;height:100dvh;overflow:hidden;background:#0a0e17;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#e0f7fa;position:fixed;inset:0}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center}
+  body::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(0,180,216,.09) 0%,transparent 45%),radial-gradient(circle at 80% 80%,rgba(0,119,182,.07) 0%,transparent 45%),linear-gradient(180deg,#0a0e17,#0f172a);pointer-events:none;z-index:0}
+
+  /* LOGIN */
+  #login-screen{position:fixed;inset:0;z-index:1000;background:#070b14;display:flex;align-items:center;justify-content:center;overflow:auto}
+  #login-screen.hidden{display:none}
+  .login-wrap{width:min(94vw,420px);padding:24px 0}
+  .login-brand{text-align:center;margin-bottom:28px}
+  .login-brand .logo-eyes{display:flex;justify-content:center;gap:18px;margin-bottom:14px}
+  .login-brand .logo-eye{width:42px;height:42px;border-radius:50%;background:#4ade80;box-shadow:0 0 22px rgba(74,222,128,.55);position:relative}
+  .login-brand .logo-eye::after{content:'';position:absolute;width:16px;height:16px;background:#0a0e17;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .login-brand h1{font-size:2rem;font-weight:700;color:#00e5ff;letter-spacing:-.02em}
+  .login-brand p{font-size:.9rem;opacity:.65;margin-top:6px}
+  .login-card{background:linear-gradient(145deg,#0f172a,#0c1322);border:1px solid rgba(0,229,255,.22);border-radius:20px;padding:28px 24px;box-shadow:0 25px 60px rgba(0,0,0,.45)}
+  .login-card label{display:block;font-size:.78rem;color:#7dd3fc;margin-bottom:6px;margin-top:14px}
+  .login-card label:first-of-type{margin-top:0}
+  .login-card input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid rgba(0,229,255,.25);background:#0a0e17;color:#e0f7fa;font-size:1rem}
+  .login-card input:focus{outline:none;border-color:#00e5ff;box-shadow:0 0 0 3px rgba(0,229,255,.12)}
+  .profile-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .profile-btn{padding:14px 10px;border-radius:12px;border:1.5px solid rgba(0,229,255,.22);background:rgba(0,180,216,.06);color:#e0f7fa;cursor:pointer;text-align:center;font-size:.85rem}
+  .profile-btn strong{display:block;font-size:.95rem;margin-bottom:3px;color:#00e5ff}
+  .profile-btn.active{border-color:#00e5ff;background:rgba(0,229,255,.18);box-shadow:0 0 0 1px #00e5ff}
+  .login-actions{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+  .login-actions button{width:100%;padding:14px;border:none;border-radius:11px;font-weight:700;font-size:1rem;cursor:pointer}
+  #btn-login{background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a}
+  #btn-register{background:transparent;color:#00e5ff;border:1.5px solid rgba(0,229,255,.45)}
+  .login-error{color:#f87171;font-size:.84rem;margin-top:14px;min-height:20px;text-align:center}
+  .role-hint{text-align:center;margin-top:18px;font-size:.78rem;opacity:.5}
+
+
+
+  /* WhatsApp QR (empresarial) */
+  .wa-card{background:#0f172a;border:1px solid rgba(37,211,102,.35);border-radius:16px;padding:16px;margin-bottom:14px}
+  .wa-card h2{font-size:.95rem;color:#25d366;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .wa-card p{font-size:.82rem;opacity:.75;line-height:1.45;margin-bottom:12px}
+  .wa-qr-box{width:100%;max-width:260px;margin:0 auto 12px;aspect-ratio:1;background:#111;border-radius:12px;border:1px dashed rgba(37,211,102,.4);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .wa-qr-box img{width:100%;height:100%;object-fit:contain;display:none}
+  .wa-qr-box .wa-placeholder{text-align:center;padding:16px;font-size:.8rem;opacity:.6;line-height:1.4}
+  .wa-status{font-size:.85rem;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2)}
+  .wa-status.connected{background:rgba(37,211,102,.18);color:#25d366}
+  .wa-status.waiting{color:#eab308}
+  .wa-status.disconnected{color:#f87171}
+  .wa-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .wa-actions button{flex:1;min-width:120px;padding:10px;border-radius:10px;border:none;font-weight:600;cursor:pointer;font-size:.84rem}
+  .wa-btn-primary{background:#25d366;color:#042f1a}
+  .wa-btn-secondary{background:rgba(37,211,102,.12);color:#25d366;border:1px solid rgba(37,211,102,.35)!important}
+
+  /* INVENTARIO EMPRESARIAL (móvil) */
+  #inventory-screen{display:none;width:100%;height:100%;overflow:auto;background:#0a0e17;z-index:6;position:relative}
+  #inventory-screen.active{display:block}
+  .inv-wrap{max-width:480px;margin:0 auto;padding:16px 16px 90px}
+  .inv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
+  .inv-header h1{font-size:1.25rem;color:#00e5ff}
+  .inv-header .badge{font-size:.7rem;background:rgba(0,229,255,.15);color:#00e5ff;padding:4px 10px;border-radius:8px;text-transform:uppercase}
+  .inv-card{background:#0f172a;border:1px solid rgba(0,229,255,.22);border-radius:16px;padding:16px;margin-bottom:14px}
+  .inv-card h2{font-size:.95rem;color:#7dd3fc;margin-bottom:12px}
+  .cam-box{width:100%;aspect-ratio:4/3;background:#111;border-radius:12px;overflow:hidden;position:relative;margin-bottom:12px;border:1px solid rgba(0,229,255,.2)}
+  .cam-box video,.cam-box img{width:100%;height:100%;object-fit:cover;display:block}
+  .cam-box video{transform:scaleX(-1)}
+  .cam-actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .cam-actions button,.inv-card button.primary,.inv-footer button{
+    border:none;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;font-size:.85rem
+  }
+  .btn-cam{background:rgba(0,229,255,.15);color:#00e5ff;border:1px solid rgba(0,229,255,.35)!important}
+  .btn-shot{background:#00e5ff;color:#04121a}
+  .inv-card label{display:block;font-size:.75rem;color:#7dd3fc;margin:10px 0 5px}
+  .inv-card input,.inv-card textarea{
+    width:100%;padding:11px 12px;border-radius:10px;border:1px solid rgba(0,229,255,.25);
+    background:#0a0e17;color:#e0f7fa;font-size:.95rem;font-family:inherit
+  }
+  .inv-card textarea{min-height:70px;resize:vertical}
+  .inv-card button.primary{width:100%;margin-top:14px;background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a}
+  .product-list{display:flex;flex-direction:column;gap:10px}
+  .product-item{display:flex;gap:12px;background:#0c1220;border:1px solid rgba(0,229,255,.15);border-radius:12px;padding:10px;align-items:center}
+  .product-item img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#111;flex-shrink:0}
+  .product-item .info{flex:1;min-width:0}
+  .product-item .info strong{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .product-item .info span{font-size:.8rem;opacity:.7}
+  .product-item .del{background:none;border:none;color:#f87171;cursor:pointer;font-size:.8rem;padding:6px}
+  .inv-footer{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,#0a0e17 30%);display:flex;justify-content:center;z-index:20}
+  .inv-footer button{width:min(480px,100%);padding:14px;background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a;font-size:1rem}
+  .inv-empty{opacity:.5;text-align:center;padding:20px;font-size:.9rem}
+  .inv-top-actions{display:flex;gap:8px;align-items:center}
+  .inv-top-actions button{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:#f87171;padding:7px 12px;border-radius:20px;font-size:.75rem;cursor:pointer}
+
+  /* DESKTOP CONSOLE */
+  #desktop-screen{display:none;width:100%;height:100%;background:#0a0e17;z-index:5}
+  #desktop-screen.active{display:block}
+  .console-layout{display:grid;grid-template-columns:240px 1fr 280px;height:100dvh;background:#0a0e17;color:#e0f7fa}
+  .console-sidebar{background:#0c1220;border-right:1px solid rgba(0,229,255,.15);display:flex;flex-direction:column;padding:16px}
+  .sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .sidebar-header h2{color:#00e5ff;font-size:1.2rem}
+  .mode-pill{font-size:.68rem;background:rgba(0,229,255,.15);color:#00e5ff;padding:3px 8px;border-radius:8px;text-transform:uppercase}
+  .btn-new-session{width:100%;padding:10px;border:1px dashed rgba(0,229,255,.35);background:transparent;color:#7dd3fc;border-radius:10px;cursor:pointer;margin-bottom:14px;font-size:.85rem}
+  .sessions-list{flex:1;overflow:auto}
+  .session-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;margin-bottom:4px;opacity:.75}
+  .session-item.active,.session-item:hover{background:rgba(0,229,255,.12);opacity:1}
+  .sidebar-footer{border-top:1px solid rgba(0,229,255,.12);padding-top:12px;font-size:.78rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sidebar-footer button{background:none;border:none;color:#f87171;cursor:pointer;font-size:.78rem}
+  .console-main{display:flex;flex-direction:column;min-width:0;height:100dvh}
+  .chat-messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+  .msg{display:flex;max-width:85%}
+  .msg.user{align-self:flex-end}
+  .msg.assistant{align-self:flex-start}
+  .msg-bubble{padding:12px 16px;border-radius:14px;line-height:1.5;font-size:.95rem}
+  .msg.user .msg-bubble{background:rgba(0,229,255,.18);border:1px solid rgba(0,229,255,.25)}
+  .msg.assistant .msg-bubble{background:#0f172a;border:1px solid rgba(0,229,255,.12)}
+  .chat-input-area{display:flex;gap:10px;padding:14px 18px;border-top:1px solid rgba(0,229,255,.12);align-items:flex-end;background:#0a0e17}
+  .chat-input-area textarea{flex:1;resize:none;border-radius:12px;border:1px solid rgba(0,229,255,.25);background:#0c1220;color:#e0f7fa;padding:12px 14px;font-size:.95rem;max-height:120px;font-family:inherit}
+  .chat-input-area textarea:focus{outline:none;border-color:#00e5ff}
+  .attach-btn{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(0,229,255,.1);cursor:pointer;font-size:1.2rem;flex-shrink:0}
+  #btnSend{background:#00e5ff;color:#04121a;border:none;padding:0 18px;height:42px;border-radius:10px;font-weight:700;cursor:pointer;flex-shrink:0}
+  .attachments-preview{padding:0 18px 8px;font-size:.8rem;opacity:.7}
+  .console-deliverables{background:#0c1220;border-left:1px solid rgba(0,229,255,.15);padding:16px;overflow:auto;height:100dvh}
+  .console-deliverables h3{color:#7dd3fc;font-size:.95rem;margin-bottom:14px}
+  .deliverable-item{background:#0f172a;border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:12px;margin-bottom:10px}
+  .deliverable-item .type{font-size:.65rem;text-transform:uppercase;color:#00e5ff;margin-bottom:4px}
+  .deliverable-item h4{font-size:.9rem;margin-bottom:6px}
+  .deliverable-item button{display:inline-block;margin-top:6px;background:#00e5ff;color:#04121a;border:none;padding:6px 10px;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer}
+  .empty-d{opacity:.45;font-size:.85rem;text-align:center;padding:20px 0}
+  .force-role{position:fixed;bottom:14px;left:14px;z-index:50;font-size:.74rem;opacity:.45}
+  .force-role button{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.28);color:#90e0ef;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:.74rem}
+  @media(max-width:900px){.console-layout{grid-template-columns:1fr}.console-sidebar,.console-deliverables{display:none}}
+
+  /* MOBILE FACE */
+  #mobile-screen{display:none;width:100%;height:100%;position:relative;z-index:5}
+  #mobile-screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .face-container{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:all .4s ease;cursor:pointer}
+  @media (orientation:portrait){
+    .face-container{width:88vw;max-width:380px;height:62vh}
+    .eyes{gap:13vw}.eye{width:26vw;height:26vw;max-width:130px;max-height:130px}
+    .eye::before{width:10vw;height:10vw;max-width:50px;max-height:50px}
+    .mouth{width:16vw;height:4.5vw;max-width:80px;max-height:24px;margin-top:7vw}
+  }
+  @media (orientation:landscape){
+    .face-container{width:78vw;height:78vh;max-width:640px}
+    .eyes{gap:10vw}.eye{width:18vw;height:18vw;max-width:150px;max-height:150px}
+    .eye::before{width:7vw;height:7vw;max-width:56px;max-height:56px}
+    .mouth{width:12vw;height:3.5vw;max-width:95px;max-height:28px;margin-top:3.5vw}
+  }
+  .eyes{display:flex;justify-content:center}
+  .eye{background:var(--eye-color,#4ade80);border-radius:50%;position:relative;box-shadow:0 0 35px var(--glow,rgba(74,222,128,.5)),inset 0 0 18px rgba(0,0,0,.3);transition:all .3s ease;overflow:hidden}
+  .eye::before{content:'';position:absolute;background:var(--pupil,#0a0e17);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);transition:all .2s ease}
+  .eyelid{position:absolute;top:0;left:0;width:100%;height:100%;background:#0a0e17;border-radius:50%;transform:scaleY(0);transform-origin:top;transition:transform .11s;z-index:2}
+  .eye.blink .eyelid{transform:scaleY(1)}
+  .mouth{background:var(--mouth-color,var(--eye-color,#4ade80));border-radius:0 0 40px 40px;transition:all .3s ease;box-shadow:0 0 20px var(--glow,rgba(74,222,128,.4))}
+  .face-container.talking .mouth{border-radius:50%;animation:talk .25s ease-in-out infinite alternate}
+  @keyframes talk{from{transform:scaleY(.6)}to{transform:scaleY(1.5)}}
+  .face-container.eye-round .eye{border-radius:50%}
+  .face-container.eye-almond .eye{border-radius:50% 50% 50% 50% / 60% 60% 40% 40%}
+  .face-container.eye-square .eye{border-radius:22%}
+  .face-container.eye-anime .eye{border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;transform:scaleY(1.05)}
+  .face-container.eye-cat .eye{border-radius:50% 50% 50% 50% / 70% 70% 30% 30%}
+  .face-container.happy{--eye-color:#fef08a!important;--glow:rgba(250,204,21,.7);--mouth-color:#fef08a}
+  .face-container.happy .eye{border-radius:50% 50% 35% 35%!important;transform:scaleY(.85)}
+  .face-container.happy .mouth{border-radius:0 0 50px 50px;transform:scaleY(1.8) scaleX(1.2)}
+  .face-container.angry{--eye-color:#f87171!important;--glow:rgba(239,68,68,.8);--mouth-color:#f87171}
+  .face-container.angry .eye{border-radius:30% 30% 50% 50%!important;transform:scaleY(.75)}
+  .face-container.angry .eye::before{transform:translate(-50%,-65%) scale(.9)}
+  .face-container.angry .mouth{border-radius:40px 40px 0 0;transform:scaleY(.6) scaleX(1.1)}
+  .face-container.sad{--eye-color:#60a5fa!important;--glow:rgba(59,130,246,.7);--mouth-color:#60a5fa}
+  .face-container.sad .eye{transform:scaleY(.7);border-radius:50% 50% 40% 40%!important}
+  .face-container.sad .eye::before{transform:translate(-50%,-30%) scale(.8)}
+  .face-container.sad .mouth{border-radius:40px 40px 0 0;transform:scaleY(.5) scaleX(.85)}
+  .face-container.surprised{--eye-color:#e2e8f0!important;--glow:rgba(255,255,255,.9);--mouth-color:#e2e8f0}
+  .face-container.surprised .eye{transform:scale(1.2)}
+  .face-container.surprised .eye::before{transform:translate(-50%,-50%) scale(1.3)}
+  .face-container.surprised .mouth{border-radius:50%;transform:scale(1.5)}
+  .face-container.love{--eye-color:#f472b6!important;--glow:rgba(244,114,182,.8);--mouth-color:#f472b6}
+  .face-container.love .eye{transform:scale(1.05)}
+  .face-container.love .eye::before{background:#f472b6;transform:translate(-50%,-50%) scale(.7);border-radius:50% 50% 50% 0;rotate:-45deg}
+  .face-container.talking .eye{transform:scaleY(.92)}
+  .face-container.thinking .eye{transform:scaleY(.9)}
+  .face-container.sleeping .eye{transform:scaleY(.12);box-shadow:none}
+  .face-container.sleeping .eye::before{opacity:0}
+  .face-container.sleeping .mouth{transform:scaleX(.3) scaleY(.3);opacity:.4}
+  .zzz{position:absolute;top:-12%;right:5%;font-size:clamp(1.4rem,4.5vw,2.3rem);opacity:0;transition:opacity .5s;color:#90e0ef;pointer-events:none;animation:floatZ 2.2s ease-in-out infinite}
+  @keyframes floatZ{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-14px) rotate(8deg)}}
+  .status{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:.78rem;color:#4cc9f0;opacity:.65;z-index:30;text-align:center;width:90%;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status.listening{color:#00e5ff;opacity:1}
+  .status.paused{color:#f87171;opacity:.9}
+  .mic-reset-btn,.settings-btn,.logout-mobile,.install-btn{display:none}
+  #mobile-screen.active .mic-reset-btn,#mobile-screen.active .settings-btn,#mobile-screen.active .logout-mobile{display:flex}
+  .mic-reset-btn{position:fixed;bottom:22px;right:12px;z-index:80;background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.4);color:#00e5ff;padding:7px 13px;border-radius:20px;font-size:.74rem;cursor:pointer;backdrop-filter:blur(5px);align-items:center}
+  .settings-btn{position:fixed;top:12px;right:12px;z-index:80;width:40px;height:40px;border-radius:50%;background:rgba(10,14,23,.8);border:1px solid rgba(0,229,255,.35);color:#90e0ef;font-size:1.25rem;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.4);backdrop-filter:blur(6px)}
+  .logout-mobile{position:fixed;top:12px;left:12px;z-index:80;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.4);color:#f87171;padding:7px 12px;border-radius:20px;font-size:.74rem;cursor:pointer;align-items:center}
+  .install-btn{position:fixed;bottom:22px;left:12px;z-index:80;background:rgba(0,229,255,.22);border:1px solid rgba(0,229,255,.5);color:#00e5ff;padding:7px 12px;border-radius:20px;font-size:.74rem;font-weight:bold;cursor:pointer}
+  .start-overlay{position:fixed;inset:0;background:rgba(10,14,23,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;cursor:pointer;transition:opacity .45s}
+  .start-overlay.hidden{opacity:0;pointer-events:none}
+  .start-text{font-size:1.3rem;text-align:center;padding:0 28px;line-height:1.55;color:#90e0ef;max-width:320px}
+  .start-text strong{display:block;font-size:1.65rem;margin-bottom:12px;color:#00e5ff}
+  .settings-panel{position:fixed;inset:0;z-index:90;background:rgba(5,8,15,.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .28s}
+  .settings-panel.open{opacity:1;pointer-events:auto}
+  .settings-card{width:min(92vw,360px);background:#0f172a;border:1px solid rgba(0,229,255,.3);border-radius:18px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.55);color:#e0f7fa}
+  .settings-card h2{font-size:1.12rem;color:#00e5ff;margin-bottom:14px;text-align:center}
+  .settings-section{margin-bottom:15px}
+  .settings-section label{display:block;font-size:.76rem;color:#7dd3fc;margin-bottom:8px}
+  .opt-row{display:flex;flex-wrap:wrap;gap:8px}
+  .opt-btn{flex:1 1 auto;padding:8px;border-radius:10px;border:1px solid rgba(0,229,255,.25);background:rgba(0,180,216,.08);color:#e0f7fa;font-size:.78rem;cursor:pointer;text-align:center}
+  .opt-btn.active{background:rgba(0,229,255,.3);border-color:#00e5ff;color:#fff}
+  .color-row{display:flex;gap:10px;justify-content:center}
+  .color-swatch{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+  .color-swatch.active{border-color:#00e5ff;box-shadow:0 0 0 2px #00e5ff}
+  .settings-close{display:block;width:100%;margin-top:12px;padding:11px;border:none;border-radius:10px;background:#00b4d8;color:#04121a;font-weight:700;cursor:pointer}
+  .media-box{position:fixed;background:#111;border-radius:12px;overflow:hidden;box-shadow:0 6px 25px rgba(0,0,0,.6),0 0 0 1px rgba(0,229,255,.3);z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;display:flex;align-items:center;justify-content:center}
+  .media-box.visible{opacity:1;pointer-events:auto}
+  @media (orientation:portrait){.media-box{width:min(78vw,320px);height:calc(min(78vw,320px)*.5625);bottom:58px;right:50%;transform:translateX(50%)}}
+  @media (orientation:landscape){.media-box{width:220px;height:124px;bottom:42px;right:12px}}
+  .media-close{position:absolute;top:4px;right:6px;width:28px;height:28px;background:rgba(0,0,0,.75);color:#fff;border:none;border-radius:50%;font-size:17px;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center}
+  #yt-frame{width:100%;height:100%;border:none;display:block}
+  .music-fallback{position:absolute;inset:0;z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#111;color:#90e0ef;font-size:.85rem;text-align:center;padding:12px}
+  .music-fallback.show{display:flex}
+  .music-fallback a{background:#00b4d8;color:#04121a;text-decoration:none;font-weight:600;padding:8px 16px;border-radius:999px}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="logo-eyes"><div class="logo-eye"></div><div class="logo-eye"></div></div>
+      <h1>Dimitri System</h1>
+      <p>Asistente inteligente · Cero respuestas negativas</p>
+    </div>
+    <div class="login-card">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="tu@correo.com" autocomplete="email">
+      <label>Contraseña</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      <label>Tipo de cuenta</label>
+      <div class="profile-selector">
+        <button type="button" class="profile-btn active" data-mode="personal" id="mode-personal"><strong>Personal</strong>Música · Notas · Entretenimiento</button>
+        <button type="button" class="profile-btn" data-mode="business" id="mode-business"><strong>Empresarial</strong>Mostrador · WhatsApp · Reportes</button>
+      </div>
+      <div class="login-actions">
+        <button id="btn-login">Entrar</button>
+        <button id="btn-register">Crear cuenta nueva</button>
+      </div>
+      <div class="login-error" id="login-error"></div>
+    </div>
+    <p class="role-hint" id="role-hint">Detectando dispositivo...</p>
+  </div>
+</div>
+
+<div id="desktop-screen">
+  <div class="console-layout">
+    <aside class="console-sidebar">
+      <div class="sidebar-header">
+        <h2>Dimitri</h2>
+        <span class="mode-pill" id="desktop-mode-tag">Personal</span>
+      </div>
+      <button class="btn-new-session" id="btnNewSession" type="button">+ Nueva sesión</button>
+      <div class="sessions-list" id="sessionsList">
+        <div class="session-item active">Sesión actual</div>
+      </div>
+      <div class="sidebar-footer">
+        <span id="desktop-user-email">usuario</span>
+        <button type="button" id="btn-logout-desktop">Salir</button>
+      </div>
+    </aside>
+    <main class="console-main">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg assistant">
+          <div class="msg-bubble">
+            Hola. Soy Dimitri. Escribe aquí un comando, adjunta una foto o un archivo, o pide un reporte.<br><br>
+            También puedes usar la voz desde tu celular con la misma cuenta: el resultado aparecerá a la derecha.
+          </div>
+        </div>
+      </div>
+      <div class="attachments-preview" id="attachmentsPreview"></div>
+      <div class="chat-input-area">
+        <label class="attach-btn" title="Adjuntar archivo o foto">
+          📎
+          <input type="file" id="fileInput" multiple hidden accept="image/*,.pdf,.txt,.csv,.json,.py,.js,.sql,.md,.xlsx,.docx">
+        </label>
+        <textarea id="chatInput" rows="1" placeholder="Escribe un mensaje, pide un Excel, PDF, o analiza un archivo..."></textarea>
+        <button type="button" id="btnSend">Enviar</button>
+      </div>
+    </main>
+    <aside class="console-deliverables">
+      <h3>📦 Entregables</h3>
+      <div id="deliverablesPanel">
+        <p class="empty-d">Los archivos generados aparecerán aquí</p>
+      </div>
+    </aside>
+  </div>
+  <div class="force-role"><button type="button" onclick="forceRole('mobile')">Forzar vista móvil</button></div>
+</div>
+
+
+<div id="inventory-screen">
+  <div class="inv-wrap">
+    <div class="inv-header">
+      <h1>Inventario</h1>
+      <div class="inv-top-actions">
+        <span class="badge">Empresarial</span>
+        <button type="button" id="invLogout">Salir</button>
+      </div>
+    </div>
+
+    <div class="wa-card" id="waCard">
+      <h2>📱 WhatsApp del negocio</h2>
+      <p>Escanea el QR con el WhatsApp del jefe (como WhatsApp Web). Así Dimitri podrá leer y responder mensajes de clientes cuando el backend y la API estén conectados.</p>
+      <div class="wa-status disconnected" id="waStatus">Desconectado</div>
+      <div class="wa-qr-box" id="waQrBox">
+        <div class="wa-placeholder" id="waPlaceholder">Pulsa «Generar QR»<br>para vincular WhatsApp</div>
+        <img id="waQrImg" alt="Código QR de WhatsApp">
+      </div>
+      <div class="wa-actions">
+        <button type="button" class="wa-btn-primary" id="btnWaQr">Generar QR</button>
+        <button type="button" class="wa-btn-secondary" id="btnWaDisconnect">Desconectar</button>
+      </div>
+    </div>
+
+    <div class="inv-card">
+      <h2>Nuevo producto</h2>
+      <div class="cam-box" id="camBox">
+        <video id="invVideo" autoplay playsinline muted></video>
+        <img id="invPreview" alt="" style="display:none">
+      </div>
+      <div class="cam-actions">
+        <button type="button" class="btn-cam" id="btnStartCam">📷 Activar cámara</button>
+        <button type="button" class="btn-shot" id="btnTakePhoto">Tomar foto</button>
+        <button type="button" class="btn-cam" id="btnClearPhoto">Limpiar</button>
+      </div>
+      <label>Nombre del producto</label>
+      <input type="text" id="prodName" placeholder="Ej. Gaseosa 500ml">
+      <label>Precio</label>
+      <input type="text" id="prodPrice" placeholder="Ej. 3.50" inputmode="decimal">
+      <label>Descripción</label>
+      <textarea id="prodDesc" placeholder="Detalles, marca, presentación..."></textarea>
+      <button type="button" class="primary" id="btnSaveProduct">Guardar producto</button>
+    </div>
+
+    <div class="inv-card">
+      <h2>Productos guardados</h2>
+      <div class="product-list" id="productList">
+        <div class="inv-empty">Aún no hay productos. Toma una foto y guárdalo.</div>
+      </div>
+    </div>
+  </div>
+  <div class="inv-footer">
+    <button type="button" id="btnGoToFace">Ir a Dimitri (voz)</button>
+  </div>
+</div>
+
+<div id="mobile-screen">
+  <div class="start-overlay" id="startOverlay">
+    <div class="start-text"><strong>Toca la pantalla</strong>Activa el micrófono<br>y pantalla completa</div>
+  </div>
+  <button class="settings-btn" id="settingsBtn" aria-label="Ajustes">⚙</button>
+  <button class="mic-reset-btn" id="micResetBtn">🎙️ Reiniciar Mic</button>
+  <button class="logout-mobile" id="btn-logout-mobile">Salir</button>
+  <button class="logout-mobile" id="btnBackInventory" style="left:90px;display:none;background:rgba(0,229,255,.12);border-color:rgba(0,229,255,.4);color:#00e5ff">Inventario</button>
+  <button class="install-btn" id="installBtn">📥 Instalar</button>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-card">
+      <h2>Personalizar Dimitri</h2>
+      <div class="settings-section">
+        <label>Forma de los ojos</label>
+        <div class="opt-row" id="eyeShapeOpts">
+          <button class="opt-btn active" data-eye="round">Redondos</button>
+          <button class="opt-btn" data-eye="almond">Almendrados</button>
+          <button class="opt-btn" data-eye="square">Cuadrados</button>
+          <button class="opt-btn" data-eye="anime">Anime</button>
+          <button class="opt-btn" data-eye="cat">Gato</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <label>Color base de ojos</label>
+        <div class="color-row" id="eyeColorOpts">
+          <div class="color-swatch active" data-eyecolor="#4ade80" style="background:#4ade80"></div>
+          <div class="color-swatch" data-eyecolor="#e0f7fa" style="background:#e0f7fa"></div>
+          <div class="color-swatch" data-eyecolor="#c084fc" style="background:#c084fc"></div>
+          <div class="color-swatch" data-eyecolor="#fb923c" style="background:#fb923c"></div>
+        </div>
+      </div>
+      <button class="settings-close" id="settingsClose">Listo</button>
+    </div>
+  </div>
+  <div class="face-container" id="face">
+    <div class="zzz" id="zzz">Zzz</div>
+    <div class="eyes"><div class="eye"><div class="eyelid"></div></div><div class="eye"><div class="eyelid"></div></div></div>
+    <div class="mouth"></div>
+  </div>
+  <div class="status" id="status">Escuchando... Di "Dimitri"</div>
+  <div class="media-box" id="musicPlayer">
+    <button class="media-close" id="musicClose">×</button>
+    <div class="music-fallback" id="musicFallback"><span id="fallbackMsg"></span><a id="fallbackLink" target="_blank" rel="noopener">Abrir en YouTube</a></div>
+    <div id="yt-frame"></div>
+  </div>
+</div>
+
+<script>
+function detectRole(){
+  const forced=localStorage.getItem('dimitri_force_role');
+  if(forced==='mobile'||forced==='desktop')return forced;
+  const ua=navigator.userAgent.toLowerCase();
+  const isMobileUA=/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(ua);
+  const isTablet=/ipad|tablet|playbook|silk/i.test(ua)||(navigator.maxTouchPoints>2&&/macintosh/i.test(ua));
+  if(isMobileUA||isTablet)return 'mobile';
+  if(window.innerWidth<900)return 'mobile';
+  return 'desktop';
+}
+function forceRole(role){localStorage.setItem('dimitri_force_role',role);location.reload();}
+const AUTH_KEY='dimitri_user';
+let selectedMode='personal';
+document.querySelectorAll('.profile-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.profile-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMode=btn.dataset.mode;
+  });
+});
+function getCurrentUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY));}catch{return null;}}
+function saveUser(user){localStorage.setItem(AUTH_KEY,JSON.stringify(user));}
+function logout(){localStorage.removeItem(AUTH_KEY);location.reload();}
+function showError(msg){document.getElementById('login-error').textContent=msg;}
+const role=detectRole();
+document.getElementById('role-hint').textContent=role==='desktop'?'Detectado: Computadora → Panel de recepción':'Detectado: Móvil/Tablet → Hub de voz (recomendado en horizontal)';
+document.getElementById('btn-login').onclick=()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  if(!email||!pass)return showError('Completa correo y contraseña');
+  const users=JSON.parse(localStorage.getItem('dimitri_users')||'{}');
+  if(!users[email]||users[email].password!==pass)return showError('Correo o contraseña incorrectos. ¿Crear cuenta?');
+  users[email].mode=selectedMode;
+  localStorage.setItem('dimitri_users',JSON.stringify(users));
+  saveUser({email,uid:users[email].uid,mode:selectedMode,createdAt:users[email].createdAt});
+  startApp();
+};
+document.getElementById('btn-register').onclick=()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  if(!email||!pass)return showError('Completa correo y contraseña');
+  if(pass.length<4)return showError('La contraseña debe tener al menos 4 caracteres');
+  if(!email.includes('@'))return showError('Correo no válido');
+  const users=JSON.parse(localStorage.getItem('dimitri_users')||'{}');
+  if(users[email])return showError('Ese correo ya existe. Usa Entrar.');
+  const uid='local_'+Date.now().toString(36);
+  users[email]={password:pass,uid,mode:selectedMode,createdAt:new Date().toISOString()};
+  localStorage.setItem('dimitri_users',JSON.stringify(users));
+  saveUser({email,uid,mode:selectedMode,createdAt:users[email].createdAt});
+  startApp();
+};
+document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
+document.getElementById('btn-logout-desktop').onclick=logout;
+document.getElementById('btn-logout-mobile').onclick=logout;
+function startApp(){
+  const user=getCurrentUser();
+  if(!user)return;
+  document.getElementById('login-screen').classList.add('hidden');
+  if(role==='desktop'){
+    showDesktop(user);
+  } else if(user.mode==='business'){
+    showInventory(user);
+  } else {
+    showMobile(user);
+  }
+}
+function showDesktop(user){
+  document.getElementById('desktop-screen').classList.add('active');
+  document.getElementById('desktop-user-email').textContent = user.email || user.uid;
+  document.getElementById('desktop-mode-tag').textContent = user.mode === 'business' ? 'Empresarial' : 'Personal';
+
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const btnSend = document.getElementById('btnSend');
+  const fileInput = document.getElementById('fileInput');
+  const attachmentsPreview = document.getElementById('attachmentsPreview');
+  const deliverablesPanel = document.getElementById('deliverablesPanel');
+  let pendingFiles = [];
+  let currentSessionId = 'sess_' + Date.now().toString(36);
+  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+
+  function appendMsg(role, text){
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.innerHTML = '<div class="msg-bubble">' + String(text).replace(/\n/g,'<br>') + '</div>';
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function refreshDeliverables(){
+    const key = 'dimitri_deliverables_' + user.uid;
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    if(!items.length){
+      deliverablesPanel.innerHTML = '<p class="empty-d">Los archivos generados aparecerán aquí</p>';
+      return;
+    }
+    deliverablesPanel.innerHTML = '';
+    items.slice().reverse().forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'deliverable-item';
+      el.innerHTML = '<div class="type">' + (d.type||'file') + '</div><h4>' + (d.title||'Entregable') + '</h4><button type="button">Ver</button>';
+      deliverablesPanel.appendChild(el);
+    });
+  }
+  refreshDeliverables();
+
+  fileInput.addEventListener('change', () => {
+    pendingFiles = Array.from(fileInput.files || []);
+    attachmentsPreview.textContent = pendingFiles.length
+      ? 'Adjuntos: ' + pendingFiles.map(f => f.name).join(', ')
+      : '';
+  });
+
+  async function sendMessage(){
+    const text = chatInput.value.trim();
+    if(!text && !pendingFiles.length) return;
+    appendMsg('user', text || '(archivo adjunto)');
+    chatInput.value = '';
+    const filesInfo = pendingFiles.map(f => ({ name: f.name, mime: f.type }));
+    pendingFiles = [];
+    attachmentsPreview.textContent = '';
+    fileInput.value = '';
+    appendMsg('assistant', 'Procesando...');
+
+    const key = 'dimitri_deliverables_' + user.uid;
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    items.push({
+      type: user.mode === 'business' ? 'reporte' : 'tarea',
+      title: text ? text.slice(0, 60) : 'Archivo adjunto',
+      transcript: text,
+      createdAt: new Date().toISOString()
+    });
+    localStorage.setItem(key, JSON.stringify(items));
+
+    try {
+      const res = await fetch(API + '/api/v1/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: user.uid,
+          session_id: currentSessionId,
+          text: text,
+          attachments: filesInfo,
+          mode: user.mode || 'personal'
+        })
+      });
+      if(res.ok){
+        const data = await res.json();
+        chatMessages.lastChild.remove();
+        appendMsg('assistant', data.chat_reply || data.spoken || 'Listo.');
+        refreshDeliverables();
+        return;
+      }
+    } catch(e) {}
+    chatMessages.lastChild.remove();
+    appendMsg('assistant', 'Pedido registrado. Cuando el backend esté conectado generaré el archivo real (PDF/Excel/etc.) y lo verás a la derecha.');
+    refreshDeliverables();
+  }
+
+  btnSend.onclick = sendMessage;
+  chatInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+  });
+  document.getElementById('btnNewSession').onclick = () => {
+    currentSessionId = 'sess_' + Date.now().toString(36);
+    chatMessages.innerHTML = '';
+    appendMsg('assistant', 'Nueva sesión iniciada. ¿En qué te ayudo?');
+  };
+  const logoutBtn = document.getElementById('btn-logout-desktop');
+  if(logoutBtn) logoutBtn.onclick = logout;
+}
+
+
+function inventoryKey(uid){ return 'dimitri_inventory_' + uid; }
+
+function loadProducts(uid){
+  try { return JSON.parse(localStorage.getItem(inventoryKey(uid)) || '[]'); }
+  catch { return []; }
+}
+function saveProducts(uid, list){
+  localStorage.setItem(inventoryKey(uid), JSON.stringify(list));
+}
+
+function renderProductList(uid){
+  const list = document.getElementById('productList');
+  const items = loadProducts(uid);
+  if(!items.length){
+    list.innerHTML = '<div class="inv-empty">Aún no hay productos. Toma una foto y guárdalo.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.slice().reverse().forEach((p, idx) => {
+    const realIndex = items.length - 1 - idx;
+    const el = document.createElement('div');
+    el.className = 'product-item';
+    el.innerHTML = `
+      <img src="${p.photo || ''}" alt="">
+      <div class="info">
+        <strong>${p.name || 'Sin nombre'}</strong>
+        <span>S/ ${p.price || '0'} · ${(p.desc || '').slice(0,40)}</span>
+      </div>
+      <button type="button" class="del" data-i="${realIndex}">Eliminar</button>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('.del').forEach(btn => {
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.i, 10);
+      const items = loadProducts(uid);
+      items.splice(i, 1);
+      saveProducts(uid, items);
+      renderProductList(uid);
+    };
+  });
+}
+
+let invStream = null;
+let invPhotoData = null;
+
+async function startInvCamera(){
+  const video = document.getElementById('invVideo');
+  const preview = document.getElementById('invPreview');
+  try {
+    if(invStream){ invStream.getTracks().forEach(t => t.stop()); }
+    invStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false
+    });
+    video.srcObject = invStream;
+    video.style.display = 'block';
+    preview.style.display = 'none';
+    invPhotoData = null;
+  } catch(e) {
+    alert('No se pudo abrir la cámara. Revisa los permisos del navegador.');
+  }
+}
+
+function takeInvPhoto(){
+  const video = document.getElementById('invVideo');
+  const preview = document.getElementById('invPreview');
+  if(!invStream || !video.videoWidth){
+    alert('Activa la cámara primero.');
+    return;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  // no mirror for product photos
+  ctx.drawImage(video, 0, 0);
+  invPhotoData = canvas.toDataURL('image/jpeg', 0.72);
+  preview.src = invPhotoData;
+  preview.style.display = 'block';
+  video.style.display = 'none';
+}
+
+function clearInvPhoto(){
+  invPhotoData = null;
+  const video = document.getElementById('invVideo');
+  const preview = document.getElementById('invPreview');
+  preview.style.display = 'none';
+  preview.src = '';
+  if(invStream) video.style.display = 'block';
+}
+
+function stopInvCamera(){
+  if(invStream){
+    invStream.getTracks().forEach(t => t.stop());
+    invStream = null;
+  }
+}
+
+
+function waKey(uid){ return 'dimitri_wa_' + uid; }
+
+function getWaState(uid){
+  try { return JSON.parse(localStorage.getItem(waKey(uid)) || '{}'); }
+  catch { return {}; }
+}
+function setWaState(uid, state){
+  localStorage.setItem(waKey(uid), JSON.stringify(state));
+}
+
+function updateWaUI(uid){
+  const st = getWaState(uid);
+  const statusEl = document.getElementById('waStatus');
+  const img = document.getElementById('waQrImg');
+  const ph = document.getElementById('waPlaceholder');
+  if(!statusEl) return;
+
+  if(st.status === 'connected'){
+    statusEl.className = 'wa-status connected';
+    statusEl.textContent = 'Conectado' + (st.phone ? ' · ' + st.phone : '');
+    if(img){ img.style.display = 'none'; img.removeAttribute('src'); }
+    if(ph){ ph.style.display = 'block'; ph.innerHTML = 'WhatsApp vinculado.<br>Dimitri podrá responder cuando el backend esté activo.'; }
+  } else if(st.status === 'waiting_qr'){
+    statusEl.className = 'wa-status waiting';
+    statusEl.textContent = 'Escanea el QR con WhatsApp del jefe';
+    if(ph) ph.style.display = 'none';
+    if(img && st.qrDataUrl){ img.style.display = 'block'; img.src = st.qrDataUrl; }
+  } else {
+    statusEl.className = 'wa-status disconnected';
+    statusEl.textContent = 'Desconectado';
+    if(img){ img.style.display = 'none'; }
+    if(ph){ ph.style.display = 'block'; ph.innerHTML = 'Pulsa «Generar QR»<br>para vincular WhatsApp'; }
+  }
+}
+
+/** Genera un QR visual de demostración (hasta conectar backend Baileys/Evolution). */
+function makeDemoQrDataUrl(payload){
+  // QR real vendrá del backend. Mientras: imagen SVG con patrón tipo QR + texto.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+    <rect width="240" height="240" fill="#fff"/>
+    <rect x="16" y="16" width="64" height="64" fill="#111"/>
+    <rect x="24" y="24" width="48" height="48" fill="#fff"/>
+    <rect x="32" y="32" width="32" height="32" fill="#111"/>
+    <rect x="160" y="16" width="64" height="64" fill="#111"/>
+    <rect x="168" y="24" width="48" height="48" fill="#fff"/>
+    <rect x="176" y="32" width="32" height="32" fill="#111"/>
+    <rect x="16" y="160" width="64" height="64" fill="#111"/>
+    <rect x="24" y="168" width="48" height="48" fill="#fff"/>
+    <rect x="32" y="176" width="32" height="32" fill="#111"/>
+    <g fill="#111">
+      <rect x="96" y="16" width="12" height="12"/><rect x="112" y="16" width="12" height="12"/>
+      <rect x="96" y="32" width="12" height="12"/><rect x="128" y="32" width="12" height="12"/>
+      <rect x="96" y="96" width="12" height="12"/><rect x="112" y="112" width="12" height="12"/>
+      <rect x="128" y="96" width="12" height="12"/><rect x="144" y="128" width="12" height="12"/>
+      <rect x="160" y="96" width="12" height="12"/><rect x="176" y="112" width="12" height="12"/>
+      <rect x="192" y="128" width="12" height="12"/><rect x="208" y="96" width="12" height="12"/>
+      <rect x="96" y="160" width="12" height="12"/><rect x="112" y="176" width="12" height="12"/>
+      <rect x="128" y="192" width="12" height="12"/><rect x="144" y="208" width="12" height="12"/>
+      <rect x="176" y="176" width="12" height="12"/><rect x="192" y="192" width="12" height="12"/>
+      <rect x="208" y="160" width="12" height="12"/><rect x="208" y="208" width="12" height="12"/>
+    </g>
+    <text x="120" y="228" text-anchor="middle" font-size="9" fill="#333">Demo · Backend activará QR real</text>
+  </svg>`;
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+async function requestWhatsAppQr(uid){
+  const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+  // Intento backend real
+  try {
+    const res = await fetch(API + '/api/v1/whatsapp/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid })
+    });
+    if(res.ok){
+      const data = await res.json();
+      if(data.qr){
+        setWaState(uid, { status: 'waiting_qr', qrDataUrl: data.qr, sessionId: data.sessionId || null });
+        updateWaUI(uid);
+        return;
+      }
+      if(data.status === 'connected'){
+        setWaState(uid, { status: 'connected', phone: data.phone || '' });
+        updateWaUI(uid);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Fallback demo (estructura lista; QR real cuando backend WA esté activo)
+  const demoQr = makeDemoQrDataUrl('dimitri-wa-' + uid);
+  setWaState(uid, { status: 'waiting_qr', qrDataUrl: demoQr, demo: true });
+  updateWaUI(uid);
+  // Simular "escaneado" en demo tras aviso (el usuario puede marcar conectado en pruebas)
+}
+
+function setupWhatsAppUI(uid){
+  updateWaUI(uid);
+  const btnQr = document.getElementById('btnWaQr');
+  const btnDisc = document.getElementById('btnWaDisconnect');
+  if(btnQr){
+    btnQr.onclick = async () => {
+      btnQr.disabled = true;
+      btnQr.textContent = 'Generando...';
+      await requestWhatsAppQr(uid);
+      btnQr.disabled = false;
+      btnQr.textContent = 'Generar QR';
+      const st = getWaState(uid);
+      if(st.demo){
+        // En demo: botón para simular vinculación (solo pruebas locales)
+        if(confirm('Backend WhatsApp aún no está conectado.\\n\\n¿Simular "escaneado y conectado" para probar la interfaz?')){
+          setWaState(uid, { status: 'connected', phone: 'Demo', demo: true });
+          updateWaUI(uid);
+        }
+      }
+    };
+  }
+  if(btnDisc){
+    btnDisc.onclick = async () => {
+      const API = window.DIMITRI_API || localStorage.getItem('dimitri_api') || 'http://localhost:8000';
+      try {
+        await fetch(API + '/api/v1/whatsapp/disconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid })
+        });
+      } catch(e) {}
+      setWaState(uid, { status: 'disconnected' });
+      updateWaUI(uid);
+    };
+  }
+}
+
+function showInventory(user){
+  document.getElementById('inventory-screen').classList.add('active');
+  document.getElementById('mobile-screen').classList.remove('active');
+  window.DIMITRI_UID = user.uid;
+  window.DIMITRI_EMAIL = user.email;
+  window.DIMITRI_MODE = 'business';
+
+  renderProductList(user.uid);
+  setupWhatsAppUI(user.uid);
+
+  document.getElementById('btnStartCam').onclick = () => startInvCamera();
+  document.getElementById('btnTakePhoto').onclick = () => takeInvPhoto();
+  document.getElementById('btnClearPhoto').onclick = () => clearInvPhoto();
+  document.getElementById('invLogout').onclick = () => { stopInvCamera(); logout(); };
+
+  document.getElementById('btnSaveProduct').onclick = () => {
+    const name = document.getElementById('prodName').value.trim();
+    const price = document.getElementById('prodPrice').value.trim();
+    const desc = document.getElementById('prodDesc').value.trim();
+    if(!name){ alert('Escribe el nombre del producto'); return; }
+    if(!price){ alert('Escribe el precio'); return; }
+    const items = loadProducts(user.uid);
+    items.push({
+      id: 'p_' + Date.now().toString(36),
+      name, price, desc,
+      photo: invPhotoData || '',
+      createdAt: new Date().toISOString()
+    });
+    saveProducts(user.uid, items);
+    document.getElementById('prodName').value = '';
+    document.getElementById('prodPrice').value = '';
+    document.getElementById('prodDesc').value = '';
+    clearInvPhoto();
+    renderProductList(user.uid);
+  };
+
+  document.getElementById('btnGoToFace').onclick = () => {
+    stopInvCamera();
+    document.getElementById('inventory-screen').classList.remove('active');
+    showMobile(user);
+  };
+}
+
+function showMobile(user){
+  document.getElementById('mobile-screen').classList.add('active');
+  document.getElementById('inventory-screen').classList.remove('active');
+  window.DIMITRI_UID=user.uid;
+  window.DIMITRI_EMAIL=user.email;
+  window.DIMITRI_MODE=user.mode||'personal';
+  const invBtn=document.getElementById('btnBackInventory');
+  if(invBtn){
+    if(user.mode==='business'){
+      invBtn.style.display='block';
+      invBtn.onclick=()=>{ document.getElementById('mobile-screen').classList.remove('active'); showInventory(user); };
+    } else {
+      invBtn.style.display='none';
+    }
+  }
+  initFaceAndVoice();
+}
+function initFaceAndVoice(){
+  const FACE=document.getElementById('face'),STATUS=document.getElementById('status'),START=document.getElementById('startOverlay');
+  const PLAYER=document.getElementById('musicPlayer'),CLOSEBTN=document.getElementById('musicClose');
+  const FB=document.getElementById('musicFallback'),FBMSG=document.getElementById('fallbackMsg'),FBLINK=document.getElementById('fallbackLink');
+  const ZZZ=document.getElementById('zzz');
+  const SETTINGS_BTN=document.getElementById('settingsBtn'),SETTINGS_PANEL=document.getElementById('settingsPanel'),SETTINGS_CLOSE=document.getElementById('settingsClose');
+  let recognition=null,wantListen=false,recRunning=false,isSpeaking=false,isBusy=false,micMuted=false;
+  let ytPlayer=null,ytReady=false,pendingLoad=null,queue=[],qIndex=0,musicActive=false,volume=100,lastText='',lastTime=0;
+  let prefs=JSON.parse(localStorage.getItem('dimitri_prefs')||'{}');
+  prefs=Object.assign({eyeShape:'round',eyeColor:'#4ade80'},prefs);
+  function applyPrefs(){
+    ['round','almond','square','anime','cat'].forEach(s=>FACE.classList.remove('eye-'+s));
+    FACE.classList.add('eye-'+prefs.eyeShape);
+    document.documentElement.style.setProperty('--eye-color',prefs.eyeColor);
+    document.querySelectorAll('#eyeShapeOpts .opt-btn').forEach(b=>b.classList.toggle('active',b.dataset.eye===prefs.eyeShape));
+    document.querySelectorAll('#eyeColorOpts .color-swatch').forEach(b=>b.classList.toggle('active',b.dataset.eyecolor===prefs.eyeColor));
+  }
+  function savePrefs(){localStorage.setItem('dimitri_prefs',JSON.stringify(prefs));applyPrefs();}
+  applyPrefs();
+  SETTINGS_BTN.addEventListener('click',e=>{e.stopPropagation();SETTINGS_PANEL.classList.add('open');});
+  SETTINGS_CLOSE.addEventListener('click',()=>SETTINGS_PANEL.classList.remove('open'));
+  document.getElementById('eyeShapeOpts').addEventListener('click',e=>{const btn=e.target.closest('[data-eye]');if(!btn)return;prefs.eyeShape=btn.dataset.eye;savePrefs();});
+  document.getElementById('eyeColorOpts').addEventListener('click',e=>{const btn=e.target.closest('[data-eyecolor]');if(!btn)return;prefs.eyeColor=btn.dataset.eyecolor;savePrefs();});
+  const norm=s=>s.toLowerCase().replace(/ñ/g,'\u0001').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u0001/g,'ñ').replace(/[¿?¡!.,;:"()]/g,' ').replace(/\s+/g,' ').trim();
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const rand=a=>a[Math.floor(Math.random()*a.length)];
+  function setStatus(t,listening){STATUS.textContent=t;STATUS.classList.toggle('listening',!!listening);STATUS.classList.toggle('paused',t.toLowerCase().includes('pausado'));}
+  function idleStatus(){if(!wantListen||micMuted)return;setStatus('Escuchando... Di "Dimitri"',true);}
+  function setExpression(type,ms=0){
+    const EXPR=['happy','talking','surprised','thinking','angry','sad','love','sleeping'];
+    FACE.classList.remove(...EXPR);if(type)FACE.classList.add(type);
+    if(type==='sleeping')ZZZ.style.opacity='1';else ZZZ.style.opacity='0';
+    if(ms>0)setTimeout(()=>{if(!isSpeaking){FACE.classList.remove(type);applyPrefs();}},ms);
+  }
+  function blink(){document.querySelectorAll('.eye').forEach(e=>e.classList.add('blink'));setTimeout(()=>document.querySelectorAll('.eye').forEach(e=>e.classList.remove('blink')),130);}
+  function scheduleBlink(){setTimeout(()=>{if(!isSpeaking&&!micMuted)blink();scheduleBlink();},2800+Math.random()*3200);}
+  let voiceCache=null;
+  function pickVoice(){
+    const voices=speechSynthesis.getVoices();if(!voices.length)return voiceCache;
+    const order=['es-PE','es-MX','es-US','es-419','es-CO','es-AR','es-ES'];
+    for(const l of order){const v=voices.find(v=>v.lang.replace('_','-')===l);if(v){voiceCache=v;return v;}}
+    voiceCache=voices.find(v=>v.lang.toLowerCase().startsWith('es'))||null;return voiceCache;
+  }
+  if(window.speechSynthesis)speechSynthesis.onvoiceschanged=pickVoice;
+  function speak(text,expr=null){
+    return new Promise(resolve=>{
+      if(!window.speechSynthesis){resolve();return;}
+      speechSynthesis.cancel();if(recognition){try{recognition.abort();}catch(e){}}
+      const u=new SpeechSynthesisUtterance(text);const v=pickVoice();
+      u.lang=v?v.lang:'es-ES';if(v)u.voice=v;u.rate=1.02;u.pitch=1.05;
+      let finished=false;
+      const finish=()=>{if(finished)return;finished=true;isSpeaking=false;FACE.classList.remove('talking','happy','thinking','surprised','angry','sad','love');applyPrefs();setTimeout(ensureListening,400);resolve();};
+      isSpeaking=true;setExpression(expr||'talking');setStatus('Hablando...');
+      u.onend=u.onerror=finish;setTimeout(finish,Math.max(3800,text.length*90+2800));
+      setTimeout(()=>speechSynthesis.speak(u),50);
+    });
+  }
+  const PIPED=['https://pipedapi.kavin.rocks','https://api.piped.private.coffee','https://pipedapi.adminforge.de','https://pipedapi.leptons.xyz'];
+  const INVIDIOUS=['https://inv.nadeko.net','https://yewtu.be','https://invidious.nerdvpn.de','https://invidious.privacyredirect.com'];
+  function fetchJSON(url,ms=6500){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);return fetch(url,{signal:c.signal}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();}).finally(()=>clearTimeout(t));}
+  const validIds=arr=>[...new Set((arr||[]).filter(id=>/^[\w-]{11}$/.test(id)))];
+  async function searchVideos(query){
+    const q=encodeURIComponent(query);const tasks=[];
+    PIPED.forEach(h=>tasks.push(fetchJSON(`${h}/search?q=${q}&filter=videos`).then(d=>validIds(d.items.filter(i=>!i.isShort&&i.url).map(i=>i.url.split('v=')[1])))));
+    INVIDIOUS.forEach(h=>tasks.push(fetchJSON(`${h}/api/v1/search?q=${q}&type=video`).then(d=>validIds(d.map(i=>i.videoId)))));
+    const guarded=tasks.map(p=>p.then(ids=>{if(!ids.length)throw new Error('vacío');return ids;}));
+    return Promise.any(guarded);
+  }
+  const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady=()=>{
+    const vars={autoplay:1,controls:1,playsinline:1,rel:0,modestbranding:1};
+    if(location.protocol.startsWith('http'))vars.origin=location.origin;
+    ytPlayer=new YT.Player('yt-frame',{width:'100%',height:'100%',playerVars:vars,events:{
+      onReady:()=>{ytReady=true;if(pendingLoad){loadCurrent();pendingLoad=null;}},
+      onStateChange:e=>{if(e.data===0)nextVideo(true);},onError:()=>nextVideo(true)
+    }});
+  };
+  function loadCurrent(){if(!ytReady){pendingLoad=true;return;}FB.classList.remove('show');PLAYER.classList.add('visible');musicActive=true;ytPlayer.loadVideoById(queue[qIndex]);ytPlayer.setVolume(volume);}
+  async function nextVideo(auto){if(qIndex+1>=queue.length){if(auto)stopMusic();await speak('No hay más canciones.');return;}qIndex++;loadCurrent();}
+  function stopMusic(){musicActive=false;queue=[];qIndex=0;try{if(ytPlayer&&ytReady)ytPlayer.stopVideo();}catch(e){}PLAYER.classList.remove('visible');FB.classList.remove('show');idleStatus();}
+  CLOSEBTN.addEventListener('click',e=>{e.stopPropagation();stopMusic();speak('Música detenida.');});
+  async function playMusic(query){
+    const talk=speak('Buscando '+query,'happy');let ids=null;
+    try{ids=await searchVideos(query);}catch(e){ids=null;}await talk;
+    if(ids&&ids.length){queue=ids;qIndex=0;loadCurrent();setStatus('Poniendo: '+query,true);}
+    else{const url='https://www.youtube.com/results?search_query='+encodeURIComponent(query);FBMSG.textContent='Búsqueda abierta en YouTube.';FBLINK.href=url;FB.classList.add('show');PLAYER.classList.add('visible');window.open(url,'_blank');}
+  }
+  const UNITS={cero:0,uno:1,un:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,veinte:20,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,mil:1000};
+  function wordsToDigits(t){t=t.replace(/\b(treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa) y (uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve)\b/g,(_,a,b)=>UNITS[a]+UNITS[b]);return t.replace(/\b[a-z]+\b/g,w=>(w in UNITS&&!['un','una'].includes(w))?UNITS[w]:w);}
+  function tryMath(text){const t=wordsToDigits(text);const m=t.match(/(-?\d+(?:[.,]\d+)?)\s*(\+|mas|-|menos|\*|x|por|\/|entre|dividido entre|dividido por|dividido)\s*(-?\d+(?:[.,]\d+)?)/);if(!m)return null;const a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[3].replace(',','.'));let r;switch(m[2]){case'+':case'mas':r=a+b;break;case'-':case'menos':r=a-b;break;case'*':case'x':case'por':r=a*b;break;default:if(b===0)return'No se puede dividir entre cero.';r=a/b;}r=Math.round(r*10000)/10000;return'Eso da '+String(r).replace('.',' coma ');}
+  const WAKE=/\b(dimitri|dmitri|dimitry|dimitriu|dimi)\b/i;
+  const MUSIC_VERBS='(?:reproduce(?:me)?|reproducir|ponme|ponla|ponlo|pon|poner|pone|ponga|toca(?:me)?|quiero escuchar|quiero oir|quiero ver|escuchar|play|busca(?:me)?(?: en youtube)?)';
+  async function handle(raw){
+    let text=norm(raw);if(text.length<2)return;if(!WAKE.test(text))return;
+    text=text.replace(WAKE,' ').replace(/^(oye|hey|ok|okay|hola|disculpa|por favor)\s+/i,'').replace(/\s+/g,' ').trim();
+    if(!text){await speak('¡Hola! Soy Dimitri, tu asistente personal. Pídeme lo que quieras.','happy');return;}
+    setStatus('Procesando...',true);
+    
+    // Consultas de inventario (modo empresarial)
+    if(window.DIMITRI_MODE==='business'){
+      const products = loadProducts(window.DIMITRI_UID || '');
+      if(products.length){
+        const priceAsk = /precio|cuesta|vale|cuanto|cuánto/.test(text);
+        const listAsk = /que productos|qué productos|inventario|lista de productos|que vendes|qué vendes/.test(text);
+        if(listAsk){
+          const names = products.map(p => p.name + ' a ' + p.price).join(', ');
+          await speak('Tienes ' + products.length + ' productos: ' + names, 'happy');
+          return;
+        }
+        if(priceAsk || products.some(p => text.includes(norm(p.name)))){
+          const hit = products.find(p => text.includes(norm(p.name))) ||
+            products.find(p => norm(p.name).split(' ').some(w => w.length>3 && text.includes(w)));
+          if(hit){
+            await speak(hit.name + ' cuesta ' + hit.price + (hit.desc ? '. ' + hit.desc : ''), 'happy');
+            return;
+          }
+        }
+      }
+    }
+
+    if(/^(para|parar|stop|basta|silencio|detener)\b/.test(text)){stopMusic();await speak('Música detenida.','happy');return;}
+    const mm=text.match(new RegExp('(?:^|\\s)'+MUSIC_VERBS+'\\s+(.+)$'));
+    if(mm){let q=mm[1].replace(/^(?:me\s+)?(?:(?:la|el|lo|una|un)\s+)?(?:(?:cancion|canciones|musica|video)\s+)?(?:(?:de|del)\s+)?/,'').trim();if(!q)q='música relajante';await playMusic(q);return;}
+    const mathRes=tryMath(text);if(mathRes){await speak(mathRes,'happy');return;}
+    if(/(cara|ponte)\s*feliz|alegre/.test(text)){await speak('¡Me siento muy feliz!','happy');return;}
+    if(/(cara|ponte)\s*triste/.test(text)){await speak('Ayy... qué bajón.','sad');return;}
+    if(/(cara|ponte)\s*(enojado|molesto|bravo)/.test(text)){await speak('¡Grrr! ¡Estoy molesto!','angry');return;}
+    if(/(cara|ponte)\s*enamorada/.test(text)){await speak('¡Te quiero mucho!','love');return;}
+    if(/(cara|ponte)\s*sorprendida/.test(text)){await speak('¡Guau!','surprised');return;}
+    if(/quien eres|como te llamas/.test(text)){await speak('¡Hola! Soy Dimitri, tu asistente personal de inteligencia artificial. Pídeme lo que quieras.','happy');return;}
+    if(/como estas|que tal/.test(text)){await speak('¡Excelente y listo para ayudarte!','happy');return;}
+    if(/chiste|hazme reir/.test(text)){await speak(rand(['¿Por qué los robots no tienen hermanos? Porque se programan solos.','¿Qué hace un robot en el gimnasio? Circuitos.']),'happy');return;}
+    if(/que hora es|la hora/.test(text)){await speak('Son las '+new Date().toLocaleTimeString('es-PE',{hour:'numeric',minute:'2-digit',hour12:true}).replace(/\./g,''),'happy');return;}
+    if(/a dormir|descansa|buenas noches/.test(text)){setExpression('sleeping');await speak('Buenas noches. Toca la pantalla cuando me necesites.','sleeping');return;}
+    await speak('Entendido. Estoy trabajando en eso y te avisaré cuando esté listo en el panel de tu computadora.','thinking');
+    const uid=window.DIMITRI_UID;
+    if(uid){const key='dimitri_deliverables_'+uid;const items=JSON.parse(localStorage.getItem(key)||'[]');items.push({type:window.DIMITRI_MODE==='business'?'reporte':'tarea',title:'Pedido por voz',transcript:raw,createdAt:new Date().toISOString()});localStorage.setItem(key,JSON.stringify(items));}
+  }
+  async function processCommand(raw){
+    const now=Date.now(),key=raw.trim().toLowerCase();
+    if(isSpeaking||isBusy||micMuted)return;
+    if(key===lastText&&now-lastTime<1500)return;
+    lastText=key;lastTime=now;isBusy=true;
+    try{await handle(raw);}catch(e){await speak('Uy, algo salió mal, pero ya lo estoy resolviendo.');}
+    finally{isBusy=false;idleStatus();}
+  }
+  function ensureListening(){if(!wantListen||recRunning||isSpeaking||micMuted)return;try{recognition.start();}catch(e){recRunning=false;}}
+  function startListening(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){setStatus('Reconocimiento de voz no disponible en este navegador');return;}
+    recognition=new SR();recognition.lang='es-PE';recognition.continuous=true;recognition.interimResults=false;recognition.maxAlternatives=1;
+    recognition.onstart=()=>{recRunning=true;if(!micMuted)idleStatus();};
+    recognition.onresult=ev=>{for(let i=ev.resultIndex;i<ev.results.length;i++){if(!ev.results[i].isFinal)continue;const transcript=ev.results[i][0].transcript.trim();if(transcript.length>1)processCommand(transcript);}};
+    recognition.onerror=()=>{recRunning=false;};
+    recognition.onend=()=>{recRunning=false;if(wantListen&&!isSpeaking&&!micMuted)setTimeout(ensureListening,150);};
+    wantListen=true;ensureListening();
+  }
+  FACE.addEventListener('click',()=>{
+    if(START&&!START.classList.contains('hidden'))return;
+    micMuted=!micMuted;
+    if(micMuted){wantListen=false;try{recognition&&recognition.stop();}catch(e){}recRunning=false;setStatus('Micrófono pausado (Toca la cara para activar)');speak('Micrófono pausado.','sad');}
+    else{wantListen=true;try{recognition&&recognition.stop();}catch(e){}recRunning=false;setTimeout(ensureListening,300);setStatus('Escuchando... Di "Dimitri"',true);speak('Micrófono activo.','happy');}
+  });
+  document.getElementById('micResetBtn').addEventListener('click',e=>{
+    e.stopPropagation();micMuted=false;try{recognition&&recognition.stop();}catch(err){}recRunning=false;wantListen=true;setTimeout(ensureListening,300);speak('Micrófono reiniciado.','happy');
+  });
+  START.addEventListener('click',async()=>{
+    START.classList.add('hidden');
+    try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)await el.webkitRequestFullscreen();}catch(e){}
+    try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');}catch(e){}
+    if(window.speechSynthesis)speechSynthesis.getVoices();scheduleBlink();await sleep(300);
+    await speak('¡Hola! Soy Dimitri, tu asistente personal. Pídeme lo que quieras.','happy');startListening();
+  },{once:true});
+  let deferredPrompt=null;const installBtn=document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='block';});
+  installBtn.addEventListener('click',async e=>{e.stopPropagation();if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')installBtn.style.display='none';deferredPrompt=null;});
+}
+if(getCurrentUser())startApp();
+</script>
+</body>
+</html>

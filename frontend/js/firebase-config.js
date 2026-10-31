@@ -12,4 +12,4 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 // URL del backend FastAPI (cambia en producción)
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "https://dimitri-718z.onrender.com";

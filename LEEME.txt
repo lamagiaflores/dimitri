@@ -1,0 +1,24 @@
+NO TOCAR (deja los tuyos):
+- backend/.env
+- backend/serviceAccountKey.json
+- iconos, manifest, sw.js, música del index (ya va incluida)
+
+REEMPLAZAR estos archivos en tu repo GitHub (lamagiaflores/dimitri):
+- backend/main.py
+- backend/requirements.txt
+- backend/services/llm.py
+- backend/services/tools.py
+- backend/services/firebase_admin.py
+- backend/services/adaptive.py
+- backend/routers/chat.py
+- backend/routers/voice.py
+- backend/routers/files.py
+- frontend/index.html
+- frontend/js/firebase-config.js
+
+Luego:
+git add .
+git commit -m "Fix funcional Excel Auth timeout"
+git push origin main
+
+Render debe mostrar deploy NUEVO (hoy) en verde.

@@ -11,130 +11,137 @@
 <title>Dimitri System</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-  html,body{width:100vw;height:100dvh;overflow:hidden;background:#0a0e17;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#e0f7fa;position:fixed;inset:0}
+  html,body{width:100vw;height:100dvh;overflow:hidden;background:#0a0e17;font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,'Inter',sans-serif;color:#e0f7fa;position:fixed;inset:0}
   body{display:flex;flex-direction:column;align-items:center;justify-content:center}
   body::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(0,180,216,.09) 0%,transparent 45%),radial-gradient(circle at 80% 80%,rgba(0,119,182,.07) 0%,transparent 45%),linear-gradient(180deg,#0a0e17,#0f172a);pointer-events:none;z-index:0}
 
-  /* LOGIN */
-  #login-screen{position:fixed;inset:0;z-index:1000;background:#070b14;display:flex;align-items:center;justify-content:center;overflow:auto}
+  /* LOGIN — profesional */
+  #login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;overflow:auto;
+    background:#0b0f19;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,.18), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(15,23,42,.9), transparent 50%),
+      linear-gradient(180deg,#0b0f19 0%,#111827 100%)}
   #login-screen.hidden{display:none}
-  .login-wrap{width:min(94vw,420px);padding:24px 0}
+  .login-wrap{width:min(94vw,440px);padding:32px 16px}
   .login-brand{text-align:center;margin-bottom:28px}
-  .login-brand .logo-eyes{display:flex;justify-content:center;gap:18px;margin-bottom:14px}
-  .login-brand .logo-eye{width:42px;height:42px;border-radius:50%;background:#4ade80;box-shadow:0 0 22px rgba(74,222,128,.55);position:relative}
-  .login-brand .logo-eye::after{content:'';position:absolute;width:16px;height:16px;background:#0a0e17;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
-  .login-brand h1{font-size:2rem;font-weight:700;color:#00e5ff;letter-spacing:-.02em}
-  .login-brand p{font-size:.9rem;opacity:.65;margin-top:6px}
-  .login-card{background:linear-gradient(145deg,#0f172a,#0c1322);border:1px solid rgba(0,229,255,.22);border-radius:20px;padding:28px 24px;box-shadow:0 25px 60px rgba(0,0,0,.45)}
-  .login-card label{display:block;font-size:.78rem;color:#7dd3fc;margin-bottom:6px;margin-top:14px}
+  .login-brand .logo-mark{
+    width:56px;height:56px;margin:0 auto 16px;border-radius:16px;
+    background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 40px rgba(37,99,235,.35);
+    font-weight:700;font-size:1.35rem;color:#fff;letter-spacing:-.03em}
+  .login-brand .logo-eyes{display:none}
+  .login-brand h1{font-size:1.65rem;font-weight:650;color:#f8fafc;letter-spacing:-.03em}
+  .login-brand p{font-size:.875rem;color:#94a3b8;margin-top:8px;line-height:1.45}
+  .login-card{
+    background:rgba(15,23,42,.85);border:1px solid rgba(148,163,184,.12);
+    border-radius:16px;padding:28px 26px;
+    box-shadow:0 25px 50px -12px rgba(0,0,0,.5);backdrop-filter:blur(12px)}
+  .login-card label{display:block;font-size:.72rem;font-weight:600;color:#94a3b8;margin-bottom:6px;margin-top:16px;text-transform:uppercase;letter-spacing:.06em}
   .login-card label:first-of-type{margin-top:0}
-  .login-card input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid rgba(0,229,255,.25);background:#0a0e17;color:#e0f7fa;font-size:1rem}
-  .login-card input:focus{outline:none;border-color:#00e5ff;box-shadow:0 0 0 3px rgba(0,229,255,.12)}
-  .profile-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-  .profile-btn{padding:14px 10px;border-radius:12px;border:1.5px solid rgba(0,229,255,.22);background:rgba(0,180,216,.06);color:#e0f7fa;cursor:pointer;text-align:center;font-size:.85rem}
-  .profile-btn strong{display:block;font-size:.95rem;margin-bottom:3px;color:#00e5ff}
-  .profile-btn.active{border-color:#00e5ff;background:rgba(0,229,255,.18);box-shadow:0 0 0 1px #00e5ff}
-  .login-actions{margin-top:22px;display:flex;flex-direction:column;gap:10px}
-  .login-actions button{width:100%;padding:14px;border:none;border-radius:11px;font-weight:700;font-size:1rem;cursor:pointer}
-  #btn-login{background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a}
-  #btn-register{background:transparent;color:#00e5ff;border:1.5px solid rgba(0,229,255,.45)}
-  .login-error{color:#f87171;font-size:.84rem;margin-top:14px;min-height:20px;text-align:center}
-  .role-hint{text-align:center;margin-top:18px;font-size:.78rem;opacity:.5}
+  .login-card input{
+    width:100%;padding:12px 14px;border-radius:10px;
+    border:1px solid rgba(148,163,184,.18);background:#0f172a;color:#f1f5f9;
+    font-size:.95rem;font-family:inherit;transition:border .15s,box-shadow .15s}
+  .login-card input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+  .login-card input::placeholder{color:#64748b}
+  .profile-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 6px}
+  .profile-btn{
+    padding:14px 12px;border-radius:12px;border:1px solid rgba(148,163,184,.15);
+    background:#0f172a;color:#cbd5e1;cursor:pointer;text-align:left;font-size:.8rem;
+    transition:border .15s,background .15s,box-shadow .15s}
+  .profile-btn strong{display:block;font-size:.9rem;margin-bottom:4px;color:#f1f5f9;font-weight:600}
+  .profile-btn.active{border-color:#3b82f6;background:rgba(59,130,246,.1);box-shadow:inset 0 0 0 1px rgba(59,130,246,.35)}
+  .profile-btn.active strong{color:#93c5fd}
+  .login-actions{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+  .login-actions button{padding:12px 16px;border-radius:10px;font-weight:600;font-size:.92rem;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s,transform .1s}
+  .login-actions button:active{transform:scale(.98)}
+  #btn-login{background:#2563eb;color:#fff}
+  #btn-login:hover{background:#1d4ed8}
+  #btn-register{background:transparent;color:#94a3b8;border:1px solid rgba(148,163,184,.25)}
+  #btn-register:hover{color:#e2e8f0;border-color:rgba(148,163,184,.4)}
+  .login-error{color:#f87171;font-size:.8rem;min-height:1.2em;margin-top:12px;text-align:center}
+  .role-hint{text-align:center;font-size:.75rem;color:#64748b;margin-top:18px}
 
-
-
-  /* WhatsApp QR (empresarial) */
-  .wa-card{background:#0f172a;border:1px solid rgba(37,211,102,.35);border-radius:16px;padding:16px;margin-bottom:14px}
-  .wa-card h2{font-size:.95rem;color:#25d366;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-  .wa-card p{font-size:.82rem;opacity:.75;line-height:1.45;margin-bottom:12px}
-  .wa-qr-box{width:100%;max-width:260px;margin:0 auto 12px;aspect-ratio:1;background:#111;border-radius:12px;border:1px dashed rgba(37,211,102,.4);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-  .wa-qr-box img{width:100%;height:100%;object-fit:contain;display:none}
-  .wa-qr-box .wa-placeholder{text-align:center;padding:16px;font-size:.8rem;opacity:.6;line-height:1.4}
-  .wa-status{font-size:.85rem;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2)}
-  .wa-status.connected{background:rgba(37,211,102,.18);color:#25d366}
-  .wa-status.waiting{color:#eab308}
-  .wa-status.disconnected{color:#f87171}
-  .wa-actions{display:flex;gap:8px;flex-wrap:wrap}
-  .wa-actions button{flex:1;min-width:120px;padding:10px;border-radius:10px;border:none;font-weight:600;cursor:pointer;font-size:.84rem}
-  .wa-btn-primary{background:#25d366;color:#042f1a}
-  .wa-btn-secondary{background:rgba(37,211,102,.12);color:#25d366;border:1px solid rgba(37,211,102,.35)!important}
-
-  /* INVENTARIO EMPRESARIAL (móvil) */
-  #inventory-screen{display:none;width:100%;height:100%;overflow:auto;background:#0a0e17;z-index:6;position:relative}
-  #inventory-screen.active{display:block}
-  .inv-wrap{max-width:480px;margin:0 auto;padding:16px 16px 90px}
-  .inv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
-  .inv-header h1{font-size:1.25rem;color:#00e5ff}
-  .inv-header .badge{font-size:.7rem;background:rgba(0,229,255,.15);color:#00e5ff;padding:4px 10px;border-radius:8px;text-transform:uppercase}
-  .inv-card{background:#0f172a;border:1px solid rgba(0,229,255,.22);border-radius:16px;padding:16px;margin-bottom:14px}
-  .inv-card h2{font-size:.95rem;color:#7dd3fc;margin-bottom:12px}
-  .cam-box{width:100%;aspect-ratio:4/3;background:#111;border-radius:12px;overflow:hidden;position:relative;margin-bottom:12px;border:1px solid rgba(0,229,255,.2)}
-  .cam-box video,.cam-box img{width:100%;height:100%;object-fit:cover;display:block}
-  .cam-box video{transform:scaleX(-1)}
-  .cam-actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .cam-actions button,.inv-card button.primary,.inv-footer button{
-    border:none;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;font-size:.85rem
-  }
-  .btn-cam{background:rgba(0,229,255,.15);color:#00e5ff;border:1px solid rgba(0,229,255,.35)!important}
-  .btn-shot{background:#00e5ff;color:#04121a}
-  .inv-card label{display:block;font-size:.75rem;color:#7dd3fc;margin:10px 0 5px}
-  .inv-card input,.inv-card textarea{
-    width:100%;padding:11px 12px;border-radius:10px;border:1px solid rgba(0,229,255,.25);
-    background:#0a0e17;color:#e0f7fa;font-size:.95rem;font-family:inherit
-  }
-  .inv-card textarea{min-height:70px;resize:vertical}
-  .inv-card button.primary{width:100%;margin-top:14px;background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a}
-  .product-list{display:flex;flex-direction:column;gap:10px}
-  .product-item{display:flex;gap:12px;background:#0c1220;border:1px solid rgba(0,229,255,.15);border-radius:12px;padding:10px;align-items:center}
-  .product-item img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#111;flex-shrink:0}
-  .product-item .info{flex:1;min-width:0}
-  .product-item .info strong{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .product-item .info span{font-size:.8rem;opacity:.7}
-  .product-item .del{background:none;border:none;color:#f87171;cursor:pointer;font-size:.8rem;padding:6px}
-  .inv-footer{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,#0a0e17 30%);display:flex;justify-content:center;z-index:20}
-  .inv-footer button{width:min(480px,100%);padding:14px;background:linear-gradient(135deg,#00e5ff,#00b4d8);color:#04121a;font-size:1rem}
-  .inv-empty{opacity:.5;text-align:center;padding:20px;font-size:.9rem}
-  .inv-top-actions{display:flex;gap:8px;align-items:center}
-  .inv-top-actions button{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:#f87171;padding:7px 12px;border-radius:20px;font-size:.75rem;cursor:pointer}
-
-  /* DESKTOP CONSOLE */
-  #desktop-screen{display:none;width:100%;height:100%;background:#0a0e17;z-index:5}
+  /* DESKTOP CONSOLE — profesional */
+  #desktop-screen{display:none;width:100%;height:100%;background:#0b0f19;z-index:5}
   #desktop-screen.active{display:block}
-  .console-layout{display:grid;grid-template-columns:240px 1fr 280px;height:100dvh;background:#0a0e17;color:#e0f7fa}
-  .console-sidebar{background:#0c1220;border-right:1px solid rgba(0,229,255,.15);display:flex;flex-direction:column;padding:16px}
-  .sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .sidebar-header h2{color:#00e5ff;font-size:1.2rem}
-  .mode-pill{font-size:.68rem;background:rgba(0,229,255,.15);color:#00e5ff;padding:3px 8px;border-radius:8px;text-transform:uppercase}
-  .btn-new-session{width:100%;padding:10px;border:1px dashed rgba(0,229,255,.35);background:transparent;color:#7dd3fc;border-radius:10px;cursor:pointer;margin-bottom:14px;font-size:.85rem}
-  .sessions-list{flex:1;overflow:auto}
-  .session-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;margin-bottom:4px;opacity:.75}
-  .session-item.active,.session-item:hover{background:rgba(0,229,255,.12);opacity:1}
-  .sidebar-footer{border-top:1px solid rgba(0,229,255,.12);padding-top:12px;font-size:.78rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .sidebar-footer button{background:none;border:none;color:#f87171;cursor:pointer;font-size:.78rem}
-  .console-main{display:flex;flex-direction:column;min-width:0;height:100dvh}
-  .chat-messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
-  .msg{display:flex;max-width:85%}
+  .console-layout{display:grid;grid-template-columns:260px 1fr 300px;height:100dvh;width:100%}
+  .console-sidebar{
+    background:#0f1419;border-right:1px solid rgba(255,255,255,.06);
+    display:flex;flex-direction:column;padding:0}
+  .sidebar-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .sidebar-header h2{color:#f8fafc;font-size:1.05rem;font-weight:650;letter-spacing:-.02em}
+  .mode-pill{
+    font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    background:rgba(59,130,246,.15);color:#93c5fd;padding:4px 8px;border-radius:6px}
+  .btn-new-session{
+    margin:12px 12px 8px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);color:#e2e8f0;font-size:.85rem;font-weight:500;cursor:pointer;text-align:left}
+  .btn-new-session:hover{background:rgba(255,255,255,.06)}
+  .sessions-list{flex:1;overflow:auto;padding:4px 8px 12px}
+  .session-item{
+    padding:10px 12px;border-radius:8px;font-size:.82rem;color:#94a3b8;cursor:pointer;margin-bottom:2px}
+  .session-item:hover{background:rgba(255,255,255,.04);color:#e2e8f0}
+  .session-item.active{background:rgba(59,130,246,.12);color:#93c5fd}
+  .sidebar-footer{
+    border-top:1px solid rgba(255,255,255,.06);padding:12px 16px;
+    font-size:.75rem;color:#64748b;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sidebar-footer button{background:none;border:none;color:#f87171;cursor:pointer;font-size:.75rem;font-weight:500}
+  .console-main{display:flex;flex-direction:column;height:100dvh;background:#0b0f19;min-width:0}
+  .chat-messages{flex:1;overflow:auto;padding:28px 28px 16px;display:flex;flex-direction:column;gap:16px}
+  .msg{max-width:min(720px,92%);display:flex}
   .msg.user{align-self:flex-end}
   .msg.assistant{align-self:flex-start}
-  .msg-bubble{padding:12px 16px;border-radius:14px;line-height:1.5;font-size:.95rem}
-  .msg.user .msg-bubble{background:rgba(0,229,255,.18);border:1px solid rgba(0,229,255,.25)}
-  .msg.assistant .msg-bubble{background:#0f172a;border:1px solid rgba(0,229,255,.12)}
-  .chat-input-area{display:flex;gap:10px;padding:14px 18px;border-top:1px solid rgba(0,229,255,.12);align-items:flex-end;background:#0a0e17}
-  .chat-input-area textarea{flex:1;resize:none;border-radius:12px;border:1px solid rgba(0,229,255,.25);background:#0c1220;color:#e0f7fa;padding:12px 14px;font-size:.95rem;max-height:120px;font-family:inherit}
-  .chat-input-area textarea:focus{outline:none;border-color:#00e5ff}
-  .attach-btn{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(0,229,255,.1);cursor:pointer;font-size:1.2rem;flex-shrink:0}
-  #btnSend{background:#00e5ff;color:#04121a;border:none;padding:0 18px;height:42px;border-radius:10px;font-weight:700;cursor:pointer;flex-shrink:0}
-  .attachments-preview{padding:0 18px 8px;font-size:.8rem;opacity:.7}
-  .console-deliverables{background:#0c1220;border-left:1px solid rgba(0,229,255,.15);padding:16px;overflow:auto;height:100dvh}
-  .console-deliverables h3{color:#7dd3fc;font-size:.95rem;margin-bottom:14px}
-  .deliverable-item{background:#0f172a;border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:12px;margin-bottom:10px}
-  .deliverable-item .type{font-size:.65rem;text-transform:uppercase;color:#00e5ff;margin-bottom:4px}
-  .deliverable-item h4{font-size:.9rem;margin-bottom:6px}
-  .deliverable-item button{display:inline-block;margin-top:6px;background:#00e5ff;color:#04121a;border:none;padding:6px 10px;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer}
-  .empty-d{opacity:.45;font-size:.85rem;text-align:center;padding:20px 0}
-  .force-role{position:fixed;bottom:14px;left:14px;z-index:50;font-size:.74rem;opacity:.45}
-  .force-role button{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.28);color:#90e0ef;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:.74rem}
+  .msg-bubble{
+    padding:12px 16px;border-radius:12px;font-size:.92rem;line-height:1.55;
+    user-select:text;-webkit-user-select:text}
+  .msg.user .msg-bubble{background:#1e3a5f;color:#e2e8f0;border-bottom-right-radius:4px}
+  .msg.assistant .msg-bubble{
+    background:#141a22;color:#cbd5e1;border:1px solid rgba(255,255,255,.06);border-bottom-left-radius:4px}
+  .attachments-preview{padding:0 20px;display:flex;flex-wrap:wrap;gap:8px}
+  .att-chip{font-size:.75rem;background:#1e293b;color:#94a3b8;padding:4px 10px;border-radius:6px}
+  .chat-input-area{
+    display:flex;align-items:flex-end;gap:10px;padding:14px 20px 18px;
+    border-top:1px solid rgba(255,255,255,.06);background:#0f1419}
+  .attach-btn{
+    width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.08);
+    background:#141a22;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+    font-size:1rem;color:#94a3b8}
+  .attach-btn:hover{background:#1e293b;color:#e2e8f0}
+  #chatInput{
+    flex:1;resize:none;min-height:44px;max-height:140px;padding:12px 14px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);background:#141a22;color:#f1f5f9;font-size:.92rem;
+    font-family:inherit;line-height:1.4}
+  #chatInput:focus{outline:none;border-color:rgba(59,130,246,.45);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+  #chatInput::placeholder{color:#64748b}
+  #btnSend{
+    padding:0 18px;height:44px;border-radius:10px;border:none;background:#2563eb;color:#fff;
+    font-weight:600;font-size:.88rem;cursor:pointer;flex-shrink:0;font-family:inherit}
+  #btnSend:hover{background:#1d4ed8}
+  .console-deliverables{
+    background:#0f1419;border-left:1px solid rgba(255,255,255,.06);
+    padding:18px 16px;overflow:auto;height:100dvh}
+  .console-deliverables h3{
+    color:#f1f5f9;font-size:.8rem;font-weight:600;margin-bottom:14px;
+    text-transform:uppercase;letter-spacing:.06em}
+  .deliverable-item{
+    background:#141a22;border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;padding:12px;margin-bottom:10px}
+  .deliverable-item .type{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:#60a5fa;margin-bottom:4px;font-weight:600}
+  .deliverable-item h4{font-size:.88rem;margin-bottom:8px;color:#e2e8f0;font-weight:500}
+  .deliverable-item button{
+    display:inline-block;margin-top:4px;background:#2563eb;color:#fff;border:none;
+    padding:6px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .deliverable-item button:hover{background:#1d4ed8}
+  .empty-d{font-size:.82rem;color:#64748b;line-height:1.5}
+  .force-role{position:fixed;bottom:10px;right:12px;z-index:50}
+  .force-role button{background:rgba(15,20,25,.9);border:1px solid rgba(255,255,255,.1);color:#64748b;padding:6px 10px;border-radius:6px;font-size:.7rem;cursor:pointer}
   @media(max-width:900px){.console-layout{grid-template-columns:1fr}.console-sidebar,.console-deliverables{display:none}}
+
 
   /* MOBILE FACE */
   #mobile-screen{display:none;width:100%;height:100%;position:relative;z-index:5}
@@ -250,10 +257,10 @@
 <body>
 <div id="login-screen">
   <div class="login-wrap">
-    <div class="login-brand">
-      <div class="logo-eyes"><div class="logo-eye"></div><div class="logo-eye"></div></div>
-      <h1>Dimitri System</h1>
-      <p>Asistente inteligente · Cero respuestas negativas</p>
+        <div class="login-brand">
+      <div class="logo-mark">D</div>
+      <h1>Dimitri</h1>
+      <p>Plataforma de asistencia operativa<br>para uso personal y empresarial</p>
     </div>
     <div class="login-card">
       <label>Correo electrónico</label>
@@ -282,7 +289,7 @@
         <h2>Dimitri</h2>
         <span class="mode-pill" id="desktop-mode-tag">Personal</span>
       </div>
-      <button class="btn-new-session" id="btnNewSession" type="button">+ Nueva sesión</button>
+      <button class="btn-new-session" id="btnNewSession" type="button">Nueva sesión</button>
       <div class="sessions-list" id="sessionsList">
         <div class="session-item active">Sesión actual</div>
       </div>
@@ -295,8 +302,8 @@
       <div class="chat-messages" id="chatMessages">
         <div class="msg assistant">
           <div class="msg-bubble">
-            Hola. Soy Dimitri. Escribe aquí un comando, adjunta una foto o un archivo, o pide un reporte.<br><br>
-            También puedes usar la voz desde tu celular con la misma cuenta: el resultado aparecerá a la derecha.
+            Bienvenido. Desde este panel puedes solicitar reportes, generar documentos (Excel, PDF, Word), adjuntar archivos para análisis y revisar el historial de trabajo.<br><br>
+            Los pedidos por voz desde el celular con la misma cuenta también se depositan en <strong style="color:#93c5fd">Entregables</strong>.
           </div>
         </div>
       </div>
@@ -306,14 +313,14 @@
           📎
           <input type="file" id="fileInput" multiple hidden accept="image/*,.pdf,.txt,.csv,.json,.py,.js,.sql,.md,.xlsx,.docx">
         </label>
-        <textarea id="chatInput" rows="1" placeholder="Escribe un mensaje, pide un Excel, PDF, o analiza un archivo..."></textarea>
+        <textarea id="chatInput" rows="1" placeholder="Solicita un reporte, un Excel, un PDF o describe la tarea…"></textarea>
         <button type="button" id="btnSend">Enviar</button>
       </div>
     </main>
     <aside class="console-deliverables">
-      <h3>📦 Entregables</h3>
+      <h3>Entregables</h3>
       <div id="deliverablesPanel">
-        <p class="empty-d">Los archivos generados aparecerán aquí</p>
+        <p class="empty-d">Los documentos generados se listarán aquí para descarga.</p>
       </div>
     </aside>
   </div>
@@ -607,7 +614,7 @@ function showDesktop(user){
     const key = 'dimitri_deliverables_' + user.uid;
     const items = JSON.parse(localStorage.getItem(key) || '[]');
     if(!items.length){
-      deliverablesPanel.innerHTML = '<p class="empty-d">Los archivos generados aparecerán aquí</p>';
+      deliverablesPanel.innerHTML = '<p class="empty-d">Los documentos generados se listarán aquí para descarga.</p>';
       return;
     }
     deliverablesPanel.innerHTML = '';
